@@ -1,0 +1,22 @@
+# Docker で PostgreSQL を動かすための設定ファイル
+# 使い方（このファイルがあるフォルダで）:
+#   起動する: docker compose up -d
+#   様子を見る: docker compose ps
+#   止める:   docker compose down   ← データは消えずに残る
+
+services:
+  db:
+    image: postgres:17                 # PostgreSQL 17 の公式イメージ（Homebrew と同じ 17系）
+    container_name: springboot-app-db  # 箱（コンテナ）の名前
+    environment:
+      POSTGRES_DB: springboot_app      # 最初に作るデータベースの名前
+      POSTGRES_USER: app               # ログインするユーザー名
+      POSTGRES_PASSWORD: app           # パスワード（練習用。本番では使わない）
+    ports:
+      - "5433:5432"                    # Mac の 5433番 → 箱の中の 5432番
+                                       # （Mac の 5432番は Homebrew の PostgreSQL が使っているため）
+    volumes:
+      - db-data:/var/lib/postgresql/data  # データの置き場所。箱を消してもデータが残る
+
+volumes:
+  db-data:
