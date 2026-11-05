@@ -2,6 +2,7 @@ package com.example.backend;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -45,6 +46,8 @@ class TaskControllerTest {
 
 		mockMvc.perform(get("/api/tasks"))
 				.andExpect(status().isOk())
+				// 文字化けしないように「UTF-8」の指定が付いていること
+				.andExpect(header().string("Content-Type", "application/json;charset=UTF-8"))
 				.andExpect(jsonPath("$.length()").value(2))
 				.andExpect(jsonPath("$[0].title").value("買い物"));
 	}

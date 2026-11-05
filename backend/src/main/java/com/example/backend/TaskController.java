@@ -19,9 +19,13 @@ import org.springframework.web.server.ResponseStatusException;
  * GET /api/tasks/1            … 番号 1 のタスク 1件
  *
  * 返す値（Task）は、Spring が自動で JSON に変えてくれる。
+ *
+ * produces の「charset=UTF-8」は文字化け対策。
+ * 返事に「文字コードは UTF-8」と書き添えないと、Safari などが日本語を
+ * 別の文字コード（Shift_JIS）だと思って読み、文字化けする。
  */
 @RestController
-@RequestMapping("/api/tasks")
+@RequestMapping(path = "/api/tasks", produces = "application/json;charset=UTF-8")
 public class TaskController {
 
 	/** status に使ってよい値 */
