@@ -1,5 +1,7 @@
 package com.example.backend;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
@@ -12,4 +14,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * {@code <Task, Long>} は「Task を扱う。番号（id）の型は Long」という意味。
  */
 public interface TaskRepository extends JpaRepository<Task, Long> {
+
+	/*
+	 * ここから下は「メソッドの名前」だけ書けば、Spring が名前を読んで SQL を自動で作ってくれる。
+	 *   findAll        … 全部さがす
+	 *   ByStatus       … status 列が引数と同じものだけ（WHERE status = ?）
+	 *   OrderByPositionAsc … position の小さい順に並べる（ORDER BY position ASC）
+	 */
+
+	/** 全部のタスクを、並び順（position）の小さい順で取り出す */
+	List<Task> findAllByOrderByPositionAsc();
+
+	/** 指定した状態（todo / doing / done）のタスクだけを、並び順で取り出す */
+	List<Task> findByStatusOrderByPositionAsc(String status);
 }
