@@ -1,0 +1,81 @@
+/* ボード画面の見た目（task-board の画面設計 03_screen-design.md に合わせる） */
+
+.board-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+h1 {
+  margin: 8px 0 16px;
+  font-size: 28px;
+}
+
+/* 読みこみ中・エラーの文字 */
+.message {
+  margin: 0 0 16px;
+}
+.message.error {
+  color: #c0262d;
+  font-weight: bold;
+}
+
+/* 3列を横にならべる */
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* 列は白 */
+.column {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.column h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+}
+
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* カード：長いタイトルは折り返して全部見せる */
+.card {
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  overflow-wrap: anywhere;
+}
+/* 列ごとにカードの色を変える（薄い黄・青・緑） */
+.column-todo .card {
+  background: #fff8d6;
+}
+.column-doing .card {
+  background: #e3efff;
+}
+.column-done .card {
+  background: #e2f5e4;
+}
+
+/* カードがない列の薄い文字 */
+.empty {
+  margin: 0;
+  color: #6b6b6b;
+}
+
+/* スマホ（幅768px未満）は3列を縦にならべる */
+@media (max-width: 767px) {
+  .board {
+    grid-template-columns: 1fr;
+  }
+}
