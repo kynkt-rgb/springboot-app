@@ -24,6 +24,7 @@
 - ポートがふさがっていたら、**そのポートを使っているプロセスを止めてから**、決まったポートで起動しなおす
   - 止め方: `.claude/hooks/free-port.sh 8080` または `.claude/hooks/free-port.sh 5173`
 - `--port`・`--server.port`・`SERVER_PORT`・`PORT` などでポートを変えない。`vite.config.js` の `strictPort: true`（ふさがっていたら別の番号に逃げずに止まる）を外さない
+- 起動の手順はスキル `.claude/skills/start-servers/SKILL.md`（`/start-servers`）にまとめてある
 
 ## PR のマージ
 
