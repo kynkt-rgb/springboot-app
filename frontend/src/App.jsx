@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Column from './Column.jsx'
+import TaskForm from './TaskForm.jsx'
 import './App.css'
 
 /** ボードの3つの列（左から順に表示する） */
@@ -13,6 +14,7 @@ const COLUMNS = [
  * ボード画面。
  * 開いたときにバックエンドの GET /api/tasks を呼び、
  * 返ってきたタスクを status ごとに3列に分けて表示する。
+ * 上のフォームでタスクを登録すると、「やること」列の一番下に増える。
  */
 function App() {
   const [tasks, setTasks] = useState([])
@@ -38,6 +40,11 @@ function App() {
       })
   }, [])
 
+  /** フォームで登録できたタスクを、一覧の最後に足す（読みこみ直さなくても画面に出る） */
+  function handleAdded(task) {
+    setTasks((prev) => [...prev, task])
+  }
+
   return (
     <main className="board-page">
       <h1>タスクボード</h1>
@@ -48,6 +55,8 @@ function App() {
           カードを読みこめませんでした：{errorMessage}
         </p>
       )}
+
+      {state === 'ok' && <TaskForm onAdded={handleAdded} />}
 
       {state === 'ok' && (
         <div className="board">

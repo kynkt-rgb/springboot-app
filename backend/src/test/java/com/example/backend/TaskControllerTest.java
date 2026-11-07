@@ -1,7 +1,11 @@
 package com.example.backend;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -12,6 +16,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -85,6 +90,74 @@ class TaskControllerTest {
 
 		mockMvc.perform(get("/api/tasks/999"))
 				.andExpect(status().isNotFound());
+	}
+
+	// --- 登録（POST /api/tasks） ---
+
+	/** save されたタスクに番号 100 をつけて、そのまま返すようにする（本物の DB のかわり） */
+	private void saveで番号をつける() {
+		given(taskRepository.save(any(Task.class))).willAnswer(inv -> {
+			Task t = inv.getArgument(0);
+			t.setId(100L);
+			return t;
+		});
+	}
+
+	private org.springframework.test.web.servlet.ResultActions 登録する(String json) throws Exception {
+		return mockMvc.perform(post("/api/tasks")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json));
+	}
+
+	@Test
+	void 登録するとやること列の一番下に入り201() throws Exception {
+		// いまの「やること」の一番下は position 2
+		given(taskRepository.findTopByStatusOrderByPositionDesc("todo"))
+				.willReturn(Optional.of(task(2, "宿題", "todo", 2)));
+		saveで番号をつける();
+
+		登録する("{\"title\": \"  牛乳を買う　\"}")
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.id").value(100))
+				// 前後の空白（全角スペースも）が取りのぞかれている
+				.andExpect(jsonPath("$.title").value("牛乳を買う"))
+				.andExpect(jsonPath("$.status").value("todo"))
+				.andExpect(jsonPath("$.position").value(3));
+	}
+
+	@Test
+	void やること列が空なら位置は1() throws Exception {
+		given(taskRepository.findTopByStatusOrderByPositionDesc("todo")).willReturn(Optional.empty());
+		saveで番号をつける();
+
+		登録する("{\"title\": \"買い物\"}")
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.position").value(1));
+	}
+
+	@Test
+	void 空白だけのタイトルなら400で保存しない() throws Exception {
+		登録する("{\"title\": \"   \"}")
+				.andExpect(status().isBadRequest());
+		登録する("{}")
+				.andExpect(status().isBadRequest());
+		verify(taskRepository, never()).save(any(Task.class));
+	}
+
+	@Test
+	void 絵文字は1文字と数えて50文字までOK() throws Exception {
+		given(taskRepository.findTopByStatusOrderByPositionDesc("todo")).willReturn(Optional.empty());
+		saveで番号をつける();
+
+		登録する("{\"title\": \"" + "😀".repeat(50) + "\"}")
+				.andExpect(status().isCreated());
+	}
+
+	@Test
+	void 五十一文字なら400で保存しない() throws Exception {
+		登録する("{\"title\": \"" + "あ".repeat(51) + "\"}")
+				.andExpect(status().isBadRequest());
+		verify(taskRepository, never()).save(any(Task.class));
 	}
 
 }
