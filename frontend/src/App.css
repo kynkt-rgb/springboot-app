@@ -20,6 +20,43 @@ h1 {
   font-weight: bold;
 }
 
+/* 登録フォーム：入力欄と「追加」ボタンを横にならべる */
+.task-form {
+  margin: 0 0 16px;
+}
+.task-form-row {
+  display: flex;
+  gap: 8px;
+}
+.task-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 16px;
+  border: 1px solid #b5b5b5;
+  border-radius: 6px;
+}
+.task-form input[aria-invalid='true'] {
+  border-color: #c0262d;
+}
+.task-form button {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffffff;
+  background: #2f6fd6;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.task-form button:disabled {
+  background: #9bb6e3;
+  cursor: wait;
+}
+.task-form .message {
+  margin: 8px 0 0;
+}
+
 /* 3列を横にならべる */
 .board {
   display: grid;
@@ -77,5 +114,9 @@ h1 {
 @media (max-width: 767px) {
   .board {
     grid-template-columns: 1fr;
+  }
+  /* スマホでは入力欄と追加ボタンを横幅いっぱいにする */
+  .task-form-row {
+    flex-direction: column;
   }
 }
