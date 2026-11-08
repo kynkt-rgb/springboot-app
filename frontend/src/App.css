@@ -252,6 +252,13 @@ h1::after {
   color: var(--rose);
   font-weight: bold;
 }
+/* 優先度「中」は緑、「低」は濃い青（どの列の背景の上でも読める濃さ） */
+.priority-medium {
+  color: var(--green);
+}
+.priority-low {
+  color: var(--navy);
+}
 /* 列ごとにカードの色を変える（ピンク・水色・ミント） */
 .column-todo .card {
   background: var(--pink);
