@@ -87,10 +87,8 @@ public class TaskController {
 	public Task create(@RequestBody CreateTaskRequest request) {
 		String title = checkTitle(request.title());
 
-		// 「やること」列の一番下に入れる：いまの一番下の position + 1（列が空なら 1）
-		long position = taskRepository.findTopByStatusOrderByPositionDesc("todo")
-				.map(last -> last.getPosition() + 1)
-				.orElse(1L);
+		// 「やること」列の一番下に入れる
+		long position = nextPosition("todo");
 
 		Task task = new Task();
 		task.setTitle(title);
@@ -105,7 +103,8 @@ public class TaskController {
 	 *
 	 * 「送られてこなかった」と「空（null）にしたい」を見分けるため、中身を Map（名前 → 値の表）で受け取る。
 	 *   description / dueDate … null や "" なら空にする
-	 *   title / priority      … 空にはできない
+	 *   title / priority / status … 空にはできない
+	 *   status が変わったら（列を移動したら）、position をその列の一番下にする
 	 * 成功すると 200 OK と、変えたあとのタスクを返す。無い番号なら 404。
 	 */
 	@PatchMapping("/{id}")
@@ -130,6 +129,17 @@ public class TaskController {
 			}
 			task.setPriority(priority);
 		}
+		if (body.containsKey("status")) {
+			String status = asText(body.get("status"), "状態");
+			if (status == null || !STATUSES.contains(status)) {
+				throw badRequest("status は todo / doing / done のどれかにしてください");
+			}
+			// 同じ列に落としたときは何もしない（並び順もそのまま）
+			if (!status.equals(task.getStatus())) {
+				task.setPosition(nextPosition(status));
+				task.setStatus(status);
+			}
+		}
 		if (body.containsKey("dueDate")) {
 			String dueDate = asText(body.get("dueDate"), "期限");
 			if (dueDate == null || dueDate.isBlank()) {
@@ -148,6 +158,13 @@ public class TaskController {
 	}
 
 	// --- ここから下は、登録と変更で共通して使う小さな部品 ---
+
+	/** 列の一番下の位置：いまの一番下の position + 1（列が空なら 1） */
+	private long nextPosition(String status) {
+		return taskRepository.findTopByStatusOrderByPositionDesc(status)
+				.map(last -> last.getPosition() + 1)
+				.orElse(1L);
+	}
 
 	/** タイトルの前後の空白を取りのぞき、1〜50文字かを確かめる */
 	private static String checkTitle(String raw) {

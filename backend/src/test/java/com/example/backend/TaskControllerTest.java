@@ -259,4 +259,51 @@ class TaskControllerTest {
 				.andExpect(jsonPath("$.priority").value("medium"));
 	}
 
+	// --- 列の移動（PATCH で status を変える） ---
+
+	@Test
+	void 列を移動するとその列の一番下に入る() throws Exception {
+		番号1のタスクを用意する();
+		// いまの「進行中」の一番下は position 4
+		given(taskRepository.findTopByStatusOrderByPositionDesc("doing"))
+				.willReturn(Optional.of(task(7, "本を返す", "doing", 4)));
+
+		変更する(1, "{\"status\": \"doing\"}")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status").value("doing"))
+				.andExpect(jsonPath("$.position").value(5))
+				// ほかの項目は変わらない
+				.andExpect(jsonPath("$.title").value("買い物"));
+	}
+
+	@Test
+	void 空の列に移動すると位置は1() throws Exception {
+		番号1のタスクを用意する();
+		given(taskRepository.findTopByStatusOrderByPositionDesc("done")).willReturn(Optional.empty());
+
+		変更する(1, "{\"status\": \"done\"}")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status").value("done"))
+				.andExpect(jsonPath("$.position").value(1));
+	}
+
+	@Test
+	void 同じ列に落としたら並び順はそのまま() throws Exception {
+		番号1のタスクを用意する();
+
+		変更する(1, "{\"status\": \"todo\"}")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.position").value(1));
+		verify(taskRepository, never()).findTopByStatusOrderByPositionDesc("todo");
+	}
+
+	@Test
+	void おかしい状態に移動しようとしたら400で保存しない() throws Exception {
+		番号1のタスクを用意する();
+
+		変更する(1, "{\"status\": \"abc\"}").andExpect(status().isBadRequest());
+		変更する(1, "{\"status\": null}").andExpect(status().isBadRequest());
+		verify(taskRepository, never()).save(any(Task.class));
+	}
+
 }
