@@ -306,4 +306,66 @@ class TaskControllerTest {
 		verify(taskRepository, never()).save(any(Task.class));
 	}
 
+	// --- 列の中での並び替え（PATCH で position を送る） ---
+
+	@Test
+	void 同じ列の中で一番上に動かすと並び順が振りなおされる() throws Exception {
+		// やること [A(1), B(2), C(3)] の C を 1番目へ
+		Task a = task(1, "A", "todo", 1);
+		Task b = task(2, "B", "todo", 2);
+		Task c = task(3, "C", "todo", 3);
+		given(taskRepository.findById(3L)).willReturn(Optional.of(c));
+		given(taskRepository.findByStatusOrderByPositionAsc("todo")).willReturn(List.of(a, b, c));
+		given(taskRepository.save(any(Task.class))).willAnswer(inv -> inv.getArgument(0));
+
+		変更する(3, "{\"position\": 1}")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status").value("todo"))
+				.andExpect(jsonPath("$.position").value(1));
+		// C, A, B の順になっている
+		org.assertj.core.api.Assertions.assertThat(List.of(c.getPosition(), a.getPosition(), b.getPosition()))
+				.containsExactly(1L, 2L, 3L);
+		verify(taskRepository).saveAll(any());
+	}
+
+	@Test
+	void ほかの列の決まった場所に入れられる() throws Exception {
+		番号1のタスクを用意する();
+		// 進行中 [X(1), Y(2)] の2番目に入れる → [X, 買い物, Y]
+		Task x = task(5, "X", "doing", 1);
+		Task y = task(6, "Y", "doing", 2);
+		given(taskRepository.findByStatusOrderByPositionAsc("doing")).willReturn(List.of(x, y));
+
+		変更する(1, "{\"status\": \"doing\", \"position\": 2}")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status").value("doing"))
+				.andExpect(jsonPath("$.position").value(2));
+		org.assertj.core.api.Assertions.assertThat(List.of(x.getPosition(), y.getPosition()))
+				.containsExactly(1L, 3L);
+	}
+
+	@Test
+	void 大きすぎるpositionなら一番下に入る() throws Exception {
+		番号1のタスクを用意する();
+		Task x = task(5, "X", "doing", 1);
+		given(taskRepository.findByStatusOrderByPositionAsc("doing")).willReturn(List.of(x));
+
+		変更する(1, "{\"status\": \"doing\", \"position\": 99}")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.position").value(2));
+	}
+
+	@Test
+	void おかしいpositionなら400で保存しない() throws Exception {
+		番号1のタスクを用意する();
+
+		変更する(1, "{\"position\": 0}").andExpect(status().isBadRequest());
+		変更する(1, "{\"position\": -1}").andExpect(status().isBadRequest());
+		変更する(1, "{\"position\": 1.5}").andExpect(status().isBadRequest());
+		変更する(1, "{\"position\": \"1\"}").andExpect(status().isBadRequest());
+		変更する(1, "{\"position\": null}").andExpect(status().isBadRequest());
+		verify(taskRepository, never()).save(any(Task.class));
+		verify(taskRepository, never()).saveAll(any());
+	}
+
 }

@@ -116,6 +116,13 @@ h1 {
 .card.dragging {
   opacity: 0.4;
 }
+/* 落とすとここに入る、という青い線（カードの上か下に出す） */
+.card.drop-before {
+  box-shadow: 0 -6px 0 -2px #2f6fd6;
+}
+.card.drop-after {
+  box-shadow: 0 6px 0 -2px #2f6fd6;
+}
 .card-title {
   display: block;
 }

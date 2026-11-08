@@ -10,10 +10,11 @@ function formatDueDate(value) {
 /**
  * カード1枚。タイトルと、優先度・期限を小さく表示する。
  * クリック（または Tab で選んで Enter）すると onOpen(task) を呼び、詳細のモーダルを開く。
- * つかんで（ドラッグして）ほかの列に落とすと、その列に移る。落とし先の処理は Column がやる。
+ * つかんで（ドラッグして）ほかの列や同じ列のほかの場所に落とすと、そこに移る。落とし先の処理は Column がやる。
+ * index は列の中で上から何番目か（0から数える）。dropMark が 'before' / 'after' なら、上か下に青い線を出す。
  * （削除のボタンは、API ができてから足す）
  */
-function Card({ task, onOpen }) {
+function Card({ task, index, dropMark, onOpen }) {
   const priority = task.priority ?? 'medium'
   // つかんでいるあいだは true（カードを薄くする）
   const [dragging, setDragging] = useState(false)
@@ -26,7 +27,11 @@ function Card({ task, onOpen }) {
   }
 
   return (
-    <li className={`card${dragging ? ' dragging' : ''}`}>
+    <li
+      className={`card${dragging ? ' dragging' : ''}${dropMark ? ` drop-${dropMark}` : ''}`}
+      // Column が「どのカードの上にいるか」を知るために使う
+      data-index={index}
+    >
       {/* ボタンにしておくと、マウスがなくてもキーボードで開ける。draggable でつかめるようになる */}
       <button
         type="button"

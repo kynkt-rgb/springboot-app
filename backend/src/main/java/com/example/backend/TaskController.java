@@ -2,11 +2,13 @@ package com.example.backend;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
  * GET  /api/tasks/1            … 番号 1 のタスク 1件
  * POST /api/tasks              … タスクを 1件登録する（「やること」列の一番下に入る）
  * PATCH /api/tasks/1           … 番号 1 のタスクの、送られてきた項目だけを変える
+ *                                （列の移動・列の中での並び替えもこれでやる）
  *
  * 返す値（Task）は、Spring が自動で JSON に変えてくれる。
  *
@@ -104,10 +107,13 @@ public class TaskController {
 	 * 「送られてこなかった」と「空（null）にしたい」を見分けるため、中身を Map（名前 → 値の表）で受け取る。
 	 *   description / dueDate … null や "" なら空にする
 	 *   title / priority / status … 空にはできない
-	 *   status が変わったら（列を移動したら）、position をその列の一番下にする
+	 *   position … 列の中の上から何番目に入れるか（1から数える）。その列の並び順を振りなおす
+	 *   status だけ変わって position が無いときは、その列の一番下に入れる
 	 * 成功すると 200 OK と、変えたあとのタスクを返す。無い番号なら 404。
 	 */
 	@PatchMapping("/{id}")
+	// 何件もの並び順を書きかえるので、途中で失敗したら全部なかったことにする（トランザクション）
+	@Transactional
 	public Task update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
 		Task task = get(id);
 
@@ -129,17 +135,6 @@ public class TaskController {
 			}
 			task.setPriority(priority);
 		}
-		if (body.containsKey("status")) {
-			String status = asText(body.get("status"), "状態");
-			if (status == null || !STATUSES.contains(status)) {
-				throw badRequest("status は todo / doing / done のどれかにしてください");
-			}
-			// 同じ列に落としたときは何もしない（並び順もそのまま）
-			if (!status.equals(task.getStatus())) {
-				task.setPosition(nextPosition(status));
-				task.setStatus(status);
-			}
-		}
 		if (body.containsKey("dueDate")) {
 			String dueDate = asText(body.get("dueDate"), "期限");
 			if (dueDate == null || dueDate.isBlank()) {
@@ -154,7 +149,47 @@ public class TaskController {
 			}
 		}
 
+		// 列の移動と並び替えは、ほかの項目のチェックがぜんぶ通ってから最後にやる
+		// （ほかのカードの並び順も書きかえるので、途中でエラーになると困るため）
+		String status = task.getStatus();
+		if (body.containsKey("status")) {
+			status = asText(body.get("status"), "状態");
+			if (status == null || !STATUSES.contains(status)) {
+				throw badRequest("status は todo / doing / done のどれかにしてください");
+			}
+		}
+		if (body.containsKey("position")) {
+			// 列の中の、上から何番目に入れるか（1から数える）
+			placeInColumn(task, status, asPlace(body.get("position")));
+		} else if (!status.equals(task.getStatus())) {
+			// 場所の指定がなく、列だけ変わったときは、その列の一番下に入れる
+			task.setPosition(nextPosition(status));
+			task.setStatus(status);
+		}
+
 		return taskRepository.save(task);
+	}
+
+	/**
+	 * タスクを、列（status）の上から place 番目に入れる。
+	 * その列のカードを並べた順に 1, 2, 3… と振りなおして保存する。
+	 * place が列のカードの数より大きいときは、一番下に入れる。
+	 *
+	 * 例：やること [A, B, C] の C を 1番目へ → [C, A, B]（C=1, A=2, B=3）
+	 */
+	private void placeInColumn(Task task, String status, long place) {
+		// その列のカードを並び順で取り出し、動かすカード自身はいったん抜く
+		List<Task> column = new ArrayList<>(taskRepository.findByStatusOrderByPositionAsc(status));
+		column.removeIf(t -> t.getId().equals(task.getId()));
+
+		int index = (int) Math.min(place - 1, column.size());
+		column.add(index, task);
+		task.setStatus(status);
+
+		for (int i = 0; i < column.size(); i++) {
+			column.get(i).setPosition((long) (i + 1));
+		}
+		taskRepository.saveAll(column);
 	}
 
 	// --- ここから下は、登録と変更で共通して使う小さな部品 ---
@@ -190,6 +225,14 @@ public class TaskController {
 			return (String) value;
 		}
 		throw badRequest(name + "は文字で送ってください");
+	}
+
+	/** 送られてきた position が 1 以上の整数かを確かめる。ちがえば 400 */
+	private static long asPlace(Object value) {
+		if ((value instanceof Integer || value instanceof Long) && ((Number) value).longValue() >= 1) {
+			return ((Number) value).longValue();
+		}
+		throw badRequest("position は 1 以上の整数にしてください");
 	}
 
 	/** 400 Bad Request（送ってきた値がおかしい）のエラーを作る */
