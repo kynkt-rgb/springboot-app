@@ -88,10 +88,50 @@ h1 {
 
 /* カード：長いタイトルは折り返して全部見せる */
 .card {
-  padding: 12px;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   overflow-wrap: anywhere;
+}
+/* カードの中身はボタン（クリックで詳細を開く）。見た目はふつうのカードのまま */
+.card-button {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.card-button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+/* つかめることがわかるように、カーソルを「手」にする */
+.card-button[draggable='true'] {
+  cursor: grab;
+}
+/* つかんでいるカードは薄くする */
+.card.dragging {
+  opacity: 0.4;
+}
+.card-title {
+  display: block;
+}
+/* カードの下の小さな文字（優先度・期限） */
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 4px;
+  font-size: 14px;
+  color: #555555;
+}
+/* 優先度「高」は赤い太字で目立たせる */
+.priority-high {
+  color: #c0262d;
+  font-weight: bold;
 }
 /* 列ごとにカードの色を変える（薄い黄・青・緑） */
 .column-todo .card {
@@ -104,10 +144,124 @@ h1 {
   background: #e2f5e4;
 }
 
+/* カードを持ってきている列は、青い点線で囲んで色を変える */
+.column.drag-over {
+  background: #f3f7ff;
+  outline: 2px dashed #2f6fd6;
+  outline-offset: -2px;
+}
+
 /* カードがない列の薄い文字 */
 .empty {
   margin: 0;
   color: #6b6b6b;
+}
+
+/* 詳細のモーダル */
+.task-detail {
+  width: min(480px, calc(100% - 32px));
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+/* 後ろの画面を暗くする */
+.task-detail::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+.task-detail-body {
+  padding: 20px;
+}
+.task-detail h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+}
+/* 入力欄1つ分（上に名前、下に入力欄） */
+.task-detail .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 12px;
+  min-width: 0;
+}
+.task-detail .field span {
+  font-size: 14px;
+  color: #555555;
+}
+.task-detail input,
+.task-detail textarea,
+.task-detail select {
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  border: 1px solid #b5b5b5;
+  border-radius: 6px;
+  background: #ffffff;
+}
+.task-detail textarea {
+  resize: vertical;
+}
+/* 優先度と期限は横にならべる */
+.task-detail .field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+/* 「状態」「作った日時」などの見出しと値を横にならべる */
+.task-detail dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+  margin: 0 0 20px;
+}
+.task-detail dt {
+  color: #555555;
+}
+.task-detail dd {
+  margin: 0;
+}
+/* 状態のラベル（列のカードと同じ色） */
+.status-badge {
+  display: inline-block;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+.status-badge.status-todo {
+  background: #fff8d6;
+}
+.status-badge.status-doing {
+  background: #e3efff;
+}
+.status-badge.status-done {
+  background: #e2f5e4;
+}
+.task-detail .message {
+  margin: 0 0 12px;
+}
+/* 「キャンセル」と「保存」を右にならべる */
+.task-detail-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.task-detail button {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #ffffff;
+  background: #2f6fd6;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.task-detail button.secondary {
+  color: #1f1f1f;
+  background: #e4e6ea;
+}
+.task-detail button:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 /* スマホ（幅768px未満）は3列を縦にならべる */
