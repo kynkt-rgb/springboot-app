@@ -72,9 +72,35 @@ h1 {
   padding: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
-.column h2 {
+/* 列の見出しと「優先度順」ボタンを横にならべる */
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin: 0 0 12px;
+}
+.column h2 {
+  margin: 0;
   font-size: 20px;
+}
+.sort-button {
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 14px;
+  color: #1f1f1f;
+  background: #e4e6ea;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sort-button:hover {
+  background: #d6d9de;
+}
+.sort-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 .cards {
@@ -115,6 +141,13 @@ h1 {
 /* つかんでいるカードは薄くする */
 .card.dragging {
   opacity: 0.4;
+}
+/* 落とすとここに入る、という青い線（カードの上か下に出す） */
+.card.drop-before {
+  box-shadow: 0 -6px 0 -2px #2f6fd6;
+}
+.card.drop-after {
+  box-shadow: 0 6px 0 -2px #2f6fd6;
 }
 .card-title {
   display: block;

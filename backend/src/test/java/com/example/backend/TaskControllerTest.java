@@ -306,4 +306,118 @@ class TaskControllerTest {
 		verify(taskRepository, never()).save(any(Task.class));
 	}
 
+	// --- 列の中での並び替え（PATCH で position を送る） ---
+
+	@Test
+	void 同じ列の中で一番上に動かすと並び順が振りなおされる() throws Exception {
+		// やること [A(1), B(2), C(3)] の C を 1番目へ
+		Task a = task(1, "A", "todo", 1);
+		Task b = task(2, "B", "todo", 2);
+		Task c = task(3, "C", "todo", 3);
+		given(taskRepository.findById(3L)).willReturn(Optional.of(c));
+		given(taskRepository.findByStatusOrderByPositionAsc("todo")).willReturn(List.of(a, b, c));
+		given(taskRepository.save(any(Task.class))).willAnswer(inv -> inv.getArgument(0));
+
+		変更する(3, "{\"position\": 1}")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status").value("todo"))
+				.andExpect(jsonPath("$.position").value(1));
+		// C, A, B の順になっている
+		org.assertj.core.api.Assertions.assertThat(List.of(c.getPosition(), a.getPosition(), b.getPosition()))
+				.containsExactly(1L, 2L, 3L);
+		verify(taskRepository).saveAll(any());
+	}
+
+	@Test
+	void ほかの列の決まった場所に入れられる() throws Exception {
+		番号1のタスクを用意する();
+		// 進行中 [X(1), Y(2)] の2番目に入れる → [X, 買い物, Y]
+		Task x = task(5, "X", "doing", 1);
+		Task y = task(6, "Y", "doing", 2);
+		given(taskRepository.findByStatusOrderByPositionAsc("doing")).willReturn(List.of(x, y));
+
+		変更する(1, "{\"status\": \"doing\", \"position\": 2}")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.status").value("doing"))
+				.andExpect(jsonPath("$.position").value(2));
+		org.assertj.core.api.Assertions.assertThat(List.of(x.getPosition(), y.getPosition()))
+				.containsExactly(1L, 3L);
+	}
+
+	@Test
+	void 大きすぎるpositionなら一番下に入る() throws Exception {
+		番号1のタスクを用意する();
+		Task x = task(5, "X", "doing", 1);
+		given(taskRepository.findByStatusOrderByPositionAsc("doing")).willReturn(List.of(x));
+
+		変更する(1, "{\"status\": \"doing\", \"position\": 99}")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.position").value(2));
+	}
+
+	@Test
+	void おかしいpositionなら400で保存しない() throws Exception {
+		番号1のタスクを用意する();
+
+		変更する(1, "{\"position\": 0}").andExpect(status().isBadRequest());
+		変更する(1, "{\"position\": -1}").andExpect(status().isBadRequest());
+		変更する(1, "{\"position\": 1.5}").andExpect(status().isBadRequest());
+		変更する(1, "{\"position\": \"1\"}").andExpect(status().isBadRequest());
+		変更する(1, "{\"position\": null}").andExpect(status().isBadRequest());
+		verify(taskRepository, never()).save(any(Task.class));
+		verify(taskRepository, never()).saveAll(any());
+	}
+
+	// --- 優先度順に並べる（POST /api/tasks/sort-by-priority） ---
+
+	private static Task taskWithPriority(long id, String title, long position, String priority) {
+		Task t = task(id, title, "todo", position);
+		t.setPriority(priority);
+		return t;
+	}
+
+	@Test
+	void 優先度の高い順に並べなおして保存する() throws Exception {
+		// いまの並び：低A, 高B, 中C, 高D, 中E
+		Task a = taskWithPriority(1, "A", 1, "low");
+		Task b = taskWithPriority(2, "B", 2, "high");
+		Task c = taskWithPriority(3, "C", 3, "medium");
+		Task d = taskWithPriority(4, "D", 4, "high");
+		Task e = taskWithPriority(5, "E", 5, "medium");
+		given(taskRepository.findByStatusOrderByPositionAsc("todo")).willReturn(List.of(a, b, c, d, e));
+
+		mockMvc.perform(post("/api/tasks/sort-by-priority")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"status\": \"todo\"}"))
+				.andExpect(status().isOk())
+				// 高B, 高D, 中C, 中E, 低A（同じ優先度どうしは、いまの順のまま）
+				.andExpect(jsonPath("$[*].title").value(org.hamcrest.Matchers.contains("B", "D", "C", "E", "A")))
+				.andExpect(jsonPath("$[*].position").value(org.hamcrest.Matchers.contains(1, 2, 3, 4, 5)));
+		verify(taskRepository).saveAll(any());
+	}
+
+	@Test
+	void 空の列でもエラーにならない() throws Exception {
+		given(taskRepository.findByStatusOrderByPositionAsc("done")).willReturn(List.of());
+
+		mockMvc.perform(post("/api/tasks/sort-by-priority")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"status\": \"done\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(0));
+	}
+
+	@Test
+	void 優先度順でおかしい状態なら400で保存しない() throws Exception {
+		mockMvc.perform(post("/api/tasks/sort-by-priority")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"status\": \"abc\"}"))
+				.andExpect(status().isBadRequest());
+		mockMvc.perform(post("/api/tasks/sort-by-priority")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{}"))
+				.andExpect(status().isBadRequest());
+		verify(taskRepository, never()).saveAll(any());
+	}
+
 }
