@@ -19,6 +19,7 @@
 | ビルド | Gradle（Gradle Wrapper） | 9.8.2 | `gradle/wrapper/gradle-wrapper.properties` |
 | ライブラリのバージョン管理 | io.spring.dependency-management | 1.1.7 | `build.gradle` の `plugins` |
 | テスト | JUnit / Mockito（MockMvc） | JUnit 6.0.3 / Mockito 5.23.0 | Spring Boot が自動で決める |
+| 書き方チェック | Checkstyle（Gradle の checkstyle プラグイン） | 14.4.0 | `build.gradle` の `checkstyle`、ルールは `config/checkstyle/checkstyle.xml` |
 
 ### フロントエンド（`frontend/`）
 | 区分 | 技術 | バージョン | 決めているところ |
@@ -27,7 +28,7 @@
 | 画面のしくみ | React / React DOM | 19.3.1 | `package.json`（実際の版は `package-lock.json`） |
 | 開発サーバー・ビルド | Vite | 8.3.6 | 同上 |
 | Vite の React 対応 | @vitejs/plugin-react | 6.2.1 | 同上 |
-| 書き方チェック | oxlint | 1.91.0 | 同上 |
+| 書き方チェック | oxlint（react・jsx-a11y・import のルールつき） | 1.91.0 | 同上。ルールは `.oxlintrc.json` |
 | 実行環境 | Node.js / npm（Homebrew） | 26.13.0 / 11.20.0 | Mac に入っているもの |
 
 ### DB・道具

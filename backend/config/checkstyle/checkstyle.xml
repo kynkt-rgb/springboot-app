@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+  Java の書き方チェック（Checkstyle）のルール。
+  ./gradlew check（または checkstyleMain / checkstyleTest）で動く。
+  結果は build/reports/checkstyle/main.html と test.html で見られる。
+
+  いまは「警告（warning）」として出すだけで、ビルドは止めない。
+  警告を直しおわったら severity を error にして、守らないとビルドが止まるようにする。
+-->
+<module name="Checker">
+  <property name="charset" value="UTF-8"/>
+  <property name="severity" value="warning"/>
+  <property name="fileExtensions" value="java"/>
+
+  <!-- テストだけ、ゆるめるルールの一覧 -->
+  <module name="SuppressionFilter">
+    <property name="file" value="${config_loc}/suppressions.xml"/>
+  </module>
+
+  <!-- ファイルの最後は改行で終わる -->
+  <module name="NewlineAtEndOfFile"/>
+
+  <!-- 1行は120文字まで（import と package の行は除く） -->
+  <module name="LineLength">
+    <property name="max" value="120"/>
+    <property name="ignorePattern" value="^(package|import) .*"/>
+  </module>
+
+  <!-- 行の終わりに余計な空白を残さない -->
+  <module name="RegexpSingleline">
+    <property name="format" value="\s+$"/>
+    <property name="message" value="行の終わりに空白があります"/>
+  </module>
+
+  <module name="TreeWalker">
+    <!-- import -->
+    <module name="AvoidStarImport"/>
+    <module name="RedundantImport"/>
+    <module name="UnusedImports"/>
+
+    <!-- 名前のつけ方（字下げはタブでもよい：Spring Initializr の雛形がタブのため） -->
+    <module name="TypeName"/>
+    <module name="MethodName"/>
+    <module name="MemberName"/>
+    <module name="ParameterName"/>
+    <module name="LocalVariableName"/>
+    <module name="ConstantName"/>
+    <module name="PackageName"/>
+
+    <!-- 書き方 -->
+    <module name="NeedBraces"/>
+    <module name="LeftCurly"/>
+    <module name="RightCurly"/>
+    <module name="EmptyBlock"/>
+    <module name="EmptyStatement"/>
+    <module name="OneStatementPerLine"/>
+    <module name="MultipleVariableDeclarations"/>
+    <module name="ArrayTypeStyle"/>
+    <module name="UpperEll"/>
+    <module name="ModifierOrder"/>
+    <module name="RedundantModifier"/>
+    <module name="WhitespaceAround"/>
+    <module name="WhitespaceAfter"/>
+    <module name="NoWhitespaceBefore"/>
+    <module name="GenericWhitespace"/>
+    <module name="MethodParamPad"/>
+    <module name="ParenPad"/>
+
+    <!-- バグのもとになりやすい書き方 -->
+    <module name="EqualsHashCode"/>
+    <module name="SimplifyBooleanExpression"/>
+    <module name="SimplifyBooleanReturn"/>
+    <module name="StringLiteralEquality"/>
+    <module name="MissingSwitchDefault"/>
+    <module name="FallThrough"/>
+    <module name="EmptyCatchBlock"/>
+    <module name="OneTopLevelClass"/>
+    <module name="InnerAssignment"/>
+
+    <!-- 1つのメソッドが長くなりすぎない -->
+    <module name="MethodLength">
+      <property name="max" value="80"/>
+    </module>
+  </module>
+</module>

@@ -1,5 +1,6 @@
 plugins {
 	id 'java'
+	id 'checkstyle'
 	id 'org.springframework.boot' version '4.1.2'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
@@ -23,6 +24,12 @@ dependencies {
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// Java の書き方チェック（ルールは config/checkstyle/checkstyle.xml）
+// ./gradlew check で、テストと一緒に動く。いまは警告を出すだけでビルドは止めない
+checkstyle {
+	toolVersion = '14.4.0'
 }
 
 tasks.named('test') {
