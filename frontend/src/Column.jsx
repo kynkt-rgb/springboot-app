@@ -11,8 +11,11 @@ import Card from './Card.jsx'
  *   ・カードのないところに持ってくる → 列の一番下に入る
  * どこに入るかは青い線で見せる。落とすと onMove(カードの番号, この列の status, 入れる場所) を呼ぶ。
  * 入れる場所は「上から何番目のすきまか」（0 なら一番上、カードの数と同じなら一番下）。
+ *
+ * 見出しのとなりの「優先度順」ボタンを押すと onSortByPriority(この列の status) を呼ぶ。
+ * sorting が true のあいだ（保存している最中）は、ボタンを押せなくする。
  */
-function Column({ status, name, tasks, onOpen, onMove }) {
+function Column({ status, name, tasks, sorting, onOpen, onMove, onSortByPriority }) {
   // カードがこの列の上に来ているあいだ、入れる場所を入れておく（来ていないときは null）
   const [dropIndex, setDropIndex] = useState(null)
 
@@ -72,9 +75,23 @@ function Column({ status, name, tasks, onOpen, onMove }) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <h2>
-        {name}（{tasks.length}）
-      </h2>
+      <div className="column-header">
+        <h2>
+          {name}（{tasks.length}）
+        </h2>
+        {/* カードが2枚以上あるときだけ出す（1枚以下なら並べかえるものがない） */}
+        {tasks.length >= 2 && (
+          <button
+            type="button"
+            className="sort-button"
+            onClick={() => onSortByPriority(status)}
+            disabled={sorting}
+            aria-label={`${name}の列を優先度の高い順に並べる`}
+          >
+            {sorting ? '並べています…' : '優先度順'}
+          </button>
+        )}
+      </div>
       {tasks.length === 0 ? (
         <p className="empty">カードはありません</p>
       ) : (

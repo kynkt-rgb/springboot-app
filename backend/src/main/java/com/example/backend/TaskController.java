@@ -3,6 +3,7 @@ package com.example.backend;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
  * POST /api/tasks              … タスクを 1件登録する（「やること」列の一番下に入る）
  * PATCH /api/tasks/1           … 番号 1 のタスクの、送られてきた項目だけを変える
  *                                （列の移動・列の中での並び替えもこれでやる）
+ * POST /api/tasks/sort-by-priority … 1つの列のカードを、優先度の高い順（高 → 中 → 低）に並べなおす
  *
  * 返す値（Task）は、Spring が自動で JSON に変えてくれる。
  *
@@ -190,6 +192,42 @@ public class TaskController {
 			column.get(i).setPosition((long) (i + 1));
 		}
 		taskRepository.saveAll(column);
+	}
+
+	/** 優先度の高い順。この順番どおりに並べる（high が一番上） */
+	private static final List<String> PRIORITY_ORDER = List.of("high", "medium", "low");
+
+	/**
+	 * 1つの列のカードを、優先度の高い順（高 → 中 → 低）に並べなおして保存する。
+	 * 送られてきた例: { "status": "todo" }
+	 * 優先度が同じカードどうしは、いまの順番のまま。
+	 * 成功すると 200 OK と、並べなおしたその列のタスク（上から順）を返す。
+	 */
+	@PostMapping("/sort-by-priority")
+	// 何件もの並び順を書きかえるので、途中で失敗したら全部なかったことにする（トランザクション）
+	@Transactional
+	public List<Task> sortByPriority(@RequestBody Map<String, Object> body) {
+		String status = asText(body.get("status"), "状態");
+		if (status == null || !STATUSES.contains(status)) {
+			throw badRequest("status は todo / doing / done のどれかにしてください");
+		}
+
+		// いまの並び順で取り出してから、優先度で並べる。
+		// Java の sort は「同じ値どうしの順番を変えない」並べ方なので、同じ優先度ならいまの順のまま
+		List<Task> column = new ArrayList<>(taskRepository.findByStatusOrderByPositionAsc(status));
+		column.sort(Comparator.comparingInt(t -> priorityRank(t.getPriority())));
+
+		for (int i = 0; i < column.size(); i++) {
+			column.get(i).setPosition((long) (i + 1));
+		}
+		taskRepository.saveAll(column);
+		return column;
+	}
+
+	/** 優先度を「上から何番目か」の数字にする（high=0, medium=1, low=2。わからない値は medium あつかい） */
+	private static int priorityRank(String priority) {
+		int rank = PRIORITY_ORDER.indexOf(priority);
+		return rank == -1 ? PRIORITY_ORDER.indexOf("medium") : rank;
 	}
 
 	// --- ここから下は、登録と変更で共通して使う小さな部品 ---

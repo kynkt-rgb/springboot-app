@@ -25,8 +25,10 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('')
   // 詳細のモーダルで見ているタスク（見ていないときは null）
   const [selectedTask, setSelectedTask] = useState(null)
-  // カードの移動に失敗したときの理由（なければ ''）
+  // カードの移動・並べかえに失敗したときの理由（なければ ''）
   const [moveError, setMoveError] = useState('')
+  // 「優先度順」で並べている最中の列の status（していないときは null）
+  const [sortingStatus, setSortingStatus] = useState(null)
 
   useEffect(() => {
     fetch('/api/tasks')
@@ -112,6 +114,35 @@ function App() {
     }
   }
 
+  /**
+   * 1つの列を、優先度の高い順（高 → 中 → 低）に並べなおす（「優先度順」ボタンで呼ばれる）。
+   * POST /api/tasks/sort-by-priority に送り、サーバーが並べなおして保存した結果で画面を変える。
+   */
+  async function handleSortByPriority(status) {
+    if (sortingStatus) return
+    setSortingStatus(status)
+    setMoveError('')
+    try {
+      const res = await fetch('/api/tasks/sort-by-priority', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (!res.ok) {
+        // サーバーが理由（message）を返していれば、それを出す
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.message || `サーバーがエラーを返しました（${res.status}）`)
+      }
+      // 返ってきたのは、並べなおしたその列のタスク。新しい並び順（position）で入れかえる
+      const sorted = new Map((await res.json()).map((t) => [t.id, t]))
+      setTasks((prev) => prev.map((t) => sorted.get(t.id) ?? t))
+    } catch (err) {
+      setMoveError(`優先度順に並べられませんでした：${err.message}`)
+    } finally {
+      setSortingStatus(null)
+    }
+  }
+
   /** 一覧の中の、同じ番号のタスクを入れかえる */
   function replaceTask(task) {
     setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
@@ -149,6 +180,8 @@ function App() {
                 .sort((a, b) => a.position - b.position)}
               onOpen={setSelectedTask}
               onMove={handleMove}
+              sorting={sortingStatus === col.status}
+              onSortByPriority={handleSortByPriority}
             />
           ))}
         </div>
