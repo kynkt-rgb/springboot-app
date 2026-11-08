@@ -1,21 +1,48 @@
-/* 画面全体の基本の見た目 */
+/* 画面全体の基本の見た目（テーマ：ゆめかわラムネ） */
+
+/* 色の名前。ここを変えると、画面全体の色が変わる */
+:root {
+  --bg: #f2fbff; /* 背景（ほんのり水色） */
+  --text: #3d4a5a; /* 文字（こい紺） */
+  --text-sub: #5f6b7a; /* 小さい文字 */
+  --accent: #7cc8f0; /* ボタン（水色） */
+  --accent-hover: #68bce9;
+  --accent-strong: #3a9bd5; /* 線・枠など目立たせたいところ */
+  --accent-text: #1f3a52; /* 水色ボタンの上の文字 */
+  --pink: #fff0f6; /* 未着手 */
+  --sky: #dff4ff; /* 進行中 */
+  --mint: #dcfaee; /* 完了 */
+  --rose: #c2385f; /* 優先度「高」・削除 */
+  --soft-gray: #eef3f8; /* キャンセルなど控えめなボタン */
+  --line: #cfe3f1; /* うすい線 */
+  --shadow: 0 4px 14px rgba(124, 200, 240, 0.25); /* ふんわり水色の影 */
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  /* 背景は明るいグレー */
-  background: #f0f1f3;
-  color: #1f1f1f;
-  font-family: system-ui, 'Hiragino Sans', 'Segoe UI', sans-serif;
+  /* 背景はほんのり水色に、ピンクとミントの水玉 */
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle, #ffd9e8 2.5px, transparent 3px),
+    radial-gradient(circle, #c9f3e1 2.5px, transparent 3px);
+  background-size: 48px 48px;
+  background-position:
+    0 0,
+    24px 24px;
+  color: var(--text);
+  /* 丸ゴシック。読みこめないときは Mac の丸ゴシック */
+  font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', sans-serif;
   /* 本文は16px以上 */
   font-size: 16px;
   line-height: 1.5;
 }
 
-/* Tab キーで選んでいる部品には青い枠線 */
+/* Tab キーで選んでいる部品には水色の枠線 */
 :focus-visible {
-  outline: 3px solid #1a73e8;
+  outline: 3px solid var(--accent-strong);
   outline-offset: 2px;
 }

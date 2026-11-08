@@ -1,4 +1,5 @@
-/* ボード画面の見た目（task-board の画面設計 03_screen-design.md に合わせる） */
+/* ボード画面の見た目（task-board の画面設計 03_screen-design.md に合わせる）
+   テーマ：ゆめかわラムネ。色の名前は index.css の :root にまとめてある */
 
 .board-page {
   max-width: 1100px;
@@ -9,6 +10,22 @@
 h1 {
   margin: 8px 0 16px;
   font-size: 28px;
+  letter-spacing: 0.05em;
+}
+/* タイトルの左右の小さな飾り。読み上げソフトには読ませない */
+h1::before,
+h1::after {
+  font-size: 0.8em;
+}
+h1::before {
+  content: '☆ ';
+  content: '☆ ' / '';
+  color: var(--accent-strong);
+}
+h1::after {
+  content: ' ♡';
+  content: ' ♡' / '';
+  color: #f48fb1;
 }
 
 /* 読みこみ中・エラーの文字 */
@@ -16,7 +33,7 @@ h1 {
   margin: 0 0 16px;
 }
 .message.error {
-  color: #c0262d;
+  color: var(--rose);
   font-weight: bold;
 }
 
@@ -31,26 +48,39 @@ h1 {
 .task-form input {
   flex: 1;
   min-width: 0;
-  padding: 10px 12px;
+  padding: 10px 18px;
+  font: inherit;
   font-size: 16px;
-  border: 1px solid #b5b5b5;
-  border-radius: 6px;
+  color: var(--text);
+  background: #ffffff;
+  border: 2px solid var(--line);
+  border-radius: 999px;
 }
 .task-form input[aria-invalid='true'] {
-  border-color: #c0262d;
+  border-color: var(--rose);
 }
 .task-form button {
-  padding: 10px 20px;
+  padding: 10px 24px;
+  font: inherit;
   font-size: 16px;
   font-weight: bold;
-  color: #ffffff;
-  background: #2f6fd6;
+  color: var(--accent-text);
+  background: var(--accent);
   border: none;
-  border-radius: 6px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
   cursor: pointer;
 }
+/* 「追加」の前の小さなハート */
+.task-form button::before {
+  content: '♡ ';
+  content: '♡ ' / '';
+}
+.task-form button:hover {
+  background: var(--accent-hover);
+}
 .task-form button:disabled {
-  background: #9bb6e3;
+  opacity: 0.6;
   cursor: wait;
 }
 .task-form .message {
@@ -65,12 +95,12 @@ h1 {
   align-items: start;
 }
 
-/* 列は白 */
+/* 列は白。角を大きく丸める */
 .column {
   background: #ffffff;
-  border-radius: 8px;
-  padding: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  border-radius: 20px;
+  padding: 14px;
+  box-shadow: var(--shadow);
 }
 /* 列の見出しと「優先度順」ボタンを横にならべる */
 .column-header {
@@ -84,19 +114,39 @@ h1 {
   margin: 0;
   font-size: 20px;
 }
+/* 列の見出しの前の小さな飾り（未着手 ☆・進行中 ♡・完了 ✿） */
+.column h2::before {
+  margin-right: 4px;
+  font-size: 0.85em;
+}
+.column-todo h2::before {
+  content: '☆';
+  content: '☆' / '';
+  color: #f48fb1;
+}
+.column-doing h2::before {
+  content: '♡';
+  content: '♡' / '';
+  color: var(--accent-strong);
+}
+.column-done h2::before {
+  content: '✿';
+  content: '✿' / '';
+  color: #3fb98a;
+}
 .sort-button {
-  padding: 4px 10px;
+  padding: 4px 12px;
   font: inherit;
   font-size: 14px;
-  color: #1f1f1f;
-  background: #e4e6ea;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
+  color: var(--text);
+  background: var(--soft-gray);
+  border: 1px solid var(--line);
+  border-radius: 999px;
   cursor: pointer;
   white-space: nowrap;
 }
 .sort-button:hover {
-  background: #d6d9de;
+  background: var(--sky);
 }
 .sort-button:disabled {
   opacity: 0.6;
@@ -109,15 +159,16 @@ h1 {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 /* カード：長いタイトルは折り返して全部見せる。中身のボタンと「×」を横にならべる */
 .card {
   display: flex;
   align-items: flex-start;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 6px rgba(124, 200, 240, 0.2);
   overflow-wrap: anywhere;
 }
 /* カードの中身はボタン（クリックで詳細を開く）。見た目はふつうのカードのまま */
@@ -125,17 +176,17 @@ h1 {
   display: block;
   flex: 1;
   min-width: 0;
-  padding: 12px;
+  padding: 12px 14px;
   font: inherit;
   color: inherit;
   text-align: left;
   background: none;
   border: none;
-  border-radius: 6px;
+  border-radius: 16px;
   cursor: pointer;
 }
 .card-button:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.5);
 }
 /* 削除の「×」ボタン（task-board のプロトタイプと同じ見た目） */
 .delete-button {
@@ -145,15 +196,15 @@ h1 {
   font: inherit;
   font-size: 1.1rem;
   line-height: 1.4;
-  color: #555555;
+  color: var(--text-sub);
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: 999px;
   cursor: pointer;
 }
 .delete-button:hover {
-  color: #c0262d;
-  background: rgba(0, 0, 0, 0.06);
+  color: var(--rose);
+  background: rgba(255, 255, 255, 0.7);
 }
 /* つかめることがわかるように、カーソルを「手」にする */
 .card-button[draggable='true'] {
@@ -163,12 +214,12 @@ h1 {
 .card.dragging {
   opacity: 0.4;
 }
-/* 落とすとここに入る、という青い線（カードの上か下に出す） */
+/* 落とすとここに入る、という水色の線（カードの上か下に出す） */
 .card.drop-before {
-  box-shadow: 0 -6px 0 -2px #2f6fd6;
+  box-shadow: 0 -6px 0 -2px var(--accent-strong);
 }
 .card.drop-after {
-  box-shadow: 0 6px 0 -2px #2f6fd6;
+  box-shadow: 0 6px 0 -2px var(--accent-strong);
 }
 .card-title {
   display: block;
@@ -180,51 +231,52 @@ h1 {
   gap: 4px 12px;
   margin-top: 4px;
   font-size: 14px;
-  color: #555555;
+  color: var(--text-sub);
 }
-/* 優先度「高」は赤い太字で目立たせる */
+/* 優先度「高」はローズ色の太字で目立たせる */
 .priority-high {
-  color: #c0262d;
+  color: var(--rose);
   font-weight: bold;
 }
-/* 列ごとにカードの色を変える（薄い黄・青・緑） */
+/* 列ごとにカードの色を変える（ピンク・水色・ミント） */
 .column-todo .card {
-  background: #fff8d6;
+  background: var(--pink);
 }
 .column-doing .card {
-  background: #e3efff;
+  background: var(--sky);
 }
 .column-done .card {
-  background: #e2f5e4;
+  background: var(--mint);
 }
 
-/* カードを持ってきている列は、青い点線で囲んで色を変える */
+/* カードを持ってきている列は、水色の点線で囲んで色を変える */
 .column.drag-over {
-  background: #f3f7ff;
-  outline: 2px dashed #2f6fd6;
+  background: #f0f9ff;
+  outline: 2px dashed var(--accent-strong);
   outline-offset: -2px;
 }
 
 /* カードがない列の薄い文字 */
 .empty {
   margin: 0;
-  color: #6b6b6b;
+  color: var(--text-sub);
 }
 
 /* 詳細のモーダル */
 .task-detail {
   width: min(480px, calc(100% - 32px));
   padding: 0;
+  color: var(--text);
   border: none;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(124, 200, 240, 0.4);
 }
-/* 後ろの画面を暗くする */
+/* 後ろの画面を、うすい紺のかげでおおう */
 .task-detail::backdrop {
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(61, 74, 90, 0.4);
 }
 .task-detail-body {
-  padding: 20px;
+  padding: 24px;
 }
 .task-detail h2 {
   margin: 0 0 16px;
@@ -240,16 +292,17 @@ h1 {
 }
 .task-detail .field span {
   font-size: 14px;
-  color: #555555;
+  color: var(--text-sub);
 }
 .task-detail input,
 .task-detail textarea,
 .task-detail select {
   width: 100%;
-  padding: 8px 10px;
+  padding: 8px 12px;
   font: inherit;
-  border: 1px solid #b5b5b5;
-  border-radius: 6px;
+  color: var(--text);
+  border: 2px solid var(--line);
+  border-radius: 12px;
   background: #ffffff;
 }
 .task-detail textarea {
@@ -269,7 +322,7 @@ h1 {
   margin: 0 0 20px;
 }
 .task-detail dt {
-  color: #555555;
+  color: var(--text-sub);
 }
 .task-detail dd {
   margin: 0;
@@ -277,18 +330,18 @@ h1 {
 /* 状態のラベル（列のカードと同じ色） */
 .status-badge {
   display: inline-block;
-  padding: 0 10px;
+  padding: 0 12px;
   border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--line);
 }
 .status-badge.status-todo {
-  background: #fff8d6;
+  background: var(--pink);
 }
 .status-badge.status-doing {
-  background: #e3efff;
+  background: var(--sky);
 }
 .status-badge.status-done {
-  background: #e2f5e4;
+  background: var(--mint);
 }
 .task-detail .message {
   margin: 0 0 12px;
@@ -300,22 +353,24 @@ h1 {
   gap: 8px;
 }
 .task-detail button {
-  padding: 10px 20px;
+  padding: 10px 22px;
+  font: inherit;
   font-size: 16px;
   font-weight: bold;
-  color: #ffffff;
-  background: #2f6fd6;
+  color: var(--accent-text);
+  background: var(--accent);
   border: none;
-  border-radius: 6px;
+  border-radius: 999px;
   cursor: pointer;
 }
 .task-detail button.secondary {
-  color: #1f1f1f;
-  background: #e4e6ea;
+  color: var(--text);
+  background: var(--soft-gray);
 }
-/* 削除するボタンは赤（取り消せないことが伝わるように） */
+/* 削除するボタンはローズ色（取り消せないことが伝わるように） */
 .task-detail button.danger {
-  background: #c0262d;
+  color: #ffffff;
+  background: var(--rose);
 }
 /* 確認の窓の文。\n の改行をそのまま見せる */
 .confirm-message {
