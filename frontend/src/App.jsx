@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Column from './Column.jsx'
 import TaskForm from './TaskForm.jsx'
+import TaskDetail from './TaskDetail.jsx'
 import './App.css'
 
 /** ボードの3つの列（左から順に表示する） */
@@ -21,6 +22,8 @@ function App() {
   // 'loading'（読みこみ中） / 'error'（失敗） / 'ok'（表示できた）
   const [state, setState] = useState('loading')
   const [errorMessage, setErrorMessage] = useState('')
+  // 詳細のモーダルで見ているタスク（見ていないときは null）
+  const [selectedTask, setSelectedTask] = useState(null)
 
   useEffect(() => {
     fetch('/api/tasks')
@@ -67,10 +70,17 @@ function App() {
               name={col.name}
               // API が並び順（position）で返すので、そのまま絞るだけでよい
               tasks={tasks.filter((t) => t.status === col.status)}
+              onOpen={setSelectedTask}
             />
           ))}
         </div>
       )}
+
+      <TaskDetail
+        task={selectedTask}
+        statusName={COLUMNS.find((c) => c.status === selectedTask?.status)?.name}
+        onClose={() => setSelectedTask(null)}
+      />
     </main>
   )
 }

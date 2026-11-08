@@ -4,7 +4,7 @@ import Card from './Card.jsx'
  * ボードの1列。見出し「やること（2）」と、その列のカードを並べる。
  * カードが0枚なら「カードはありません」と表示する。
  */
-function Column({ status, name, tasks }) {
+function Column({ status, name, tasks, onOpen }) {
   return (
     <section className={`column column-${status}`}>
       <h2>
@@ -15,7 +15,7 @@ function Column({ status, name, tasks }) {
       ) : (
         <ul className="cards">
           {tasks.map((task) => (
-            <Card key={task.id} task={task} />
+            <Card key={task.id} task={task} onOpen={onOpen} />
           ))}
         </ul>
       )}
