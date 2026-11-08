@@ -201,6 +201,20 @@ h1::after {
   border: 1px solid transparent;
   border-radius: 999px;
   cursor: pointer;
+  /* ふだんは見えなくしておく（場所はとったまま。Tab キーでも選べる） */
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+/* カードにカーソルを合わせたとき・Tab キーでカードを選んだときだけ「×」を出す */
+.card:hover .delete-button,
+.card:focus-within .delete-button {
+  opacity: 1;
+}
+/* タッチ画面（カーソルがない端末）では、いままでどおりずっと出す */
+@media (hover: none) {
+  .delete-button {
+    opacity: 1;
+  }
 }
 .delete-button:hover {
   color: var(--rose);
