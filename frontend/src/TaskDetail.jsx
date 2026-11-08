@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { PRIORITIES } from './priorities.js'
+import * as api from './api.js'
 
 /** タイトル・説明の最大の文字数（サーバーと同じ） */
 const TITLE_MAX = 50
@@ -100,23 +101,13 @@ function TaskDetail({ task, statusName, onSaved, onClose }) {
     setBusy(true)
     setError('')
     try {
-      const res = await fetch(`/api/tasks/${task.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: trimmedTitle,
-          // 空のときは null を送る（サーバーで「空にする」という意味になる）
-          description: trimmedDescription === '' ? null : trimmedDescription,
-          priority,
-          dueDate: dueDate === '' ? null : dueDate,
-        }),
+      const saved = await api.updateTask(task.id, {
+        title: trimmedTitle,
+        // 空のときは null を送る（サーバーで「空にする」という意味になる）
+        description: trimmedDescription === '' ? null : trimmedDescription,
+        priority,
+        dueDate: dueDate === '' ? null : dueDate,
       })
-      if (!res.ok) {
-        // サーバーが理由（message）を返していれば、それを出す
-        const body = await res.json().catch(() => null)
-        throw new Error(body?.message || `サーバーがエラーを返しました（${res.status}）`)
-      }
-      const saved = await res.json()
       onSaved(saved)
       setBusy(false)
       close()

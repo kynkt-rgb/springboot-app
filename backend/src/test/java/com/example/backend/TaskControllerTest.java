@@ -19,6 +19,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,8 +28,10 @@ import org.springframework.test.web.servlet.MockMvc;
  * TaskController の自動テスト。
  * 本物の DB は使わず、TaskRepository を「にせもの（モック）」に差しかえて、
  * API が正しい答えを返すかだけを確かめる。
+ * @WebMvcTest は窓口（Controller）しか作らないので、仕事をする TaskService は @Import で足す。
  */
 @WebMvcTest(TaskController.class)
+@Import(TaskService.class)
 class TaskControllerTest {
 
 	@Autowired

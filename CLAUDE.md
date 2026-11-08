@@ -26,6 +26,11 @@
 - `--port`・`--server.port`・`SERVER_PORT`・`PORT` などでポートを変えない。`vite.config.js` の `strictPort: true`（ふさがっていたら別の番号に逃げずに止まる）を外さない
 - 起動の手順はスキル `.claude/skills/start-servers/SKILL.md`（`/start-servers`）にまとめてある
 
+## 品質チェック
+
+- 「品質チェックして」と言われたら、スキル `.claude/skills/quality-check/SKILL.md`（`/quality-check`）の手順でやる
+- 結果は `docs/quality-review.md` に書く。チェックやテストを通すために、ルールを外す・テストを消す・エラーを捨てるなどの「隠す直し方」はしない
+
 ## PR のマージ
 
 - Claude は PR を作ってよいが、**マージはしない**。ユーザーが画面で動作確認してからマージする
