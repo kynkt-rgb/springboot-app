@@ -1,5 +1,6 @@
 package com.example.backend;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -41,6 +42,18 @@ public class Task {
 	/** 列の中での並び順。小さいほど上に表示する */
 	@Column(nullable = false, columnDefinition = "bigint")
 	private Long position;
+
+	/** 説明。空でもよい（空なら null）。500文字まで */
+	@Column(columnDefinition = "text")
+	private String description;
+
+	/** 優先度（high / medium / low）。書かなければ 'medium'（中）が入る */
+	@Column(nullable = false, columnDefinition = "text default 'medium'")
+	private String priority = "medium";
+
+	/** 期限（日付だけ・時刻なし）。空でもよい（空なら null） */
+	@Column(name = "due_date", columnDefinition = "date")
+	private LocalDate dueDate;
 
 	/** 作った日時。保存したときに自動で入る */
 	@CreationTimestamp
@@ -90,6 +103,30 @@ public class Task {
 
 	public void setPosition(Long position) {
 		this.position = position;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getPriority() {
+		return priority;
+	}
+
+	public void setPriority(String priority) {
+		this.priority = priority;
+	}
+
+	public LocalDate getDueDate() {
+		return dueDate;
+	}
+
+	public void setDueDate(LocalDate dueDate) {
+		this.dueDate = dueDate;
 	}
 
 	public OffsetDateTime getCreatedAt() {

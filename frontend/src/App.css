@@ -108,6 +108,23 @@ h1 {
 .card-button:hover {
   background: rgba(0, 0, 0, 0.05);
 }
+.card-title {
+  display: block;
+}
+/* カードの下の小さな文字（優先度・期限） */
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 4px;
+  font-size: 14px;
+  color: #555555;
+}
+/* 優先度「高」は赤い太字で目立たせる */
+.priority-high {
+  color: #c0262d;
+  font-weight: bold;
+}
 /* 列ごとにカードの色を変える（薄い黄・青・緑） */
 .column-todo .card {
   background: #fff8d6;
@@ -143,7 +160,37 @@ h1 {
 .task-detail h2 {
   margin: 0 0 16px;
   font-size: 22px;
-  overflow-wrap: anywhere;
+}
+/* 入力欄1つ分（上に名前、下に入力欄） */
+.task-detail .field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 12px;
+  min-width: 0;
+}
+.task-detail .field span {
+  font-size: 14px;
+  color: #555555;
+}
+.task-detail input,
+.task-detail textarea,
+.task-detail select {
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  border: 1px solid #b5b5b5;
+  border-radius: 6px;
+  background: #ffffff;
+}
+.task-detail textarea {
+  resize: vertical;
+}
+/* 優先度と期限は横にならべる */
+.task-detail .field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 /* 「状態」「作った日時」などの見出しと値を横にならべる */
 .task-detail dl {
@@ -174,8 +221,14 @@ h1 {
 .status-badge.status-done {
   background: #e2f5e4;
 }
-.task-detail form {
-  text-align: right;
+.task-detail .message {
+  margin: 0 0 12px;
+}
+/* 「キャンセル」と「保存」を右にならべる */
+.task-detail-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 .task-detail button {
   padding: 10px 20px;
@@ -186,6 +239,14 @@ h1 {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+}
+.task-detail button.secondary {
+  color: #1f1f1f;
+  background: #e4e6ea;
+}
+.task-detail button:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 /* スマホ（幅768px未満）は3列を縦にならべる */

@@ -48,6 +48,11 @@ function App() {
     setTasks((prev) => [...prev, task])
   }
 
+  /** モーダルで保存できたタスクを、一覧の同じ番号のものと入れかえる（読みこみ直さなくても画面が変わる） */
+  function handleSaved(saved) {
+    setTasks((prev) => prev.map((t) => (t.id === saved.id ? saved : t)))
+  }
+
   return (
     <main className="board-page">
       <h1>タスクボード</h1>
@@ -76,11 +81,16 @@ function App() {
         </div>
       )}
 
-      <TaskDetail
-        task={selectedTask}
-        statusName={COLUMNS.find((c) => c.status === selectedTask?.status)?.name}
-        onClose={() => setSelectedTask(null)}
-      />
+      {selectedTask && (
+        <TaskDetail
+          // key が変わると入力欄が作り直されるので、別のカードを開いたときに前の入力が残らない
+          key={selectedTask.id}
+          task={selectedTask}
+          statusName={COLUMNS.find((c) => c.status === selectedTask.status)?.name}
+          onSaved={handleSaved}
+          onClose={() => setSelectedTask(null)}
+        />
+      )}
     </main>
   )
 }

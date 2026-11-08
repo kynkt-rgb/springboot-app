@@ -5,11 +5,13 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -158,6 +160,103 @@ class TaskControllerTest {
 		登録する("{\"title\": \"" + "あ".repeat(51) + "\"}")
 				.andExpect(status().isBadRequest());
 		verify(taskRepository, never()).save(any(Task.class));
+	}
+
+	// --- 変更（PATCH /api/tasks/{id}） ---
+
+	/** 番号 1 のタスクがあることにして、save されたらそのまま返す */
+	private Task 番号1のタスクを用意する() {
+		Task t = task(1, "買い物", "todo", 1);
+		t.setDescription("牛乳");
+		t.setDueDate(LocalDate.of(2026, 11, 10));
+		given(taskRepository.findById(1L)).willReturn(Optional.of(t));
+		given(taskRepository.save(any(Task.class))).willAnswer(inv -> inv.getArgument(0));
+		return t;
+	}
+
+	private org.springframework.test.web.servlet.ResultActions 変更する(long id, String json) throws Exception {
+		return mockMvc.perform(patch("/api/tasks/" + id)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(json));
+	}
+
+	@Test
+	void 四つの項目を変えられる() throws Exception {
+		番号1のタスクを用意する();
+
+		変更する(1, """
+				{"title": " 牛乳を買う ", "description": "  2本  ", "priority": "high", "dueDate": "2026-12-01"}
+				""")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.title").value("牛乳を買う"))
+				.andExpect(jsonPath("$.description").value("2本"))
+				.andExpect(jsonPath("$.priority").value("high"))
+				.andExpect(jsonPath("$.dueDate").value("2026-12-01"))
+				// 状態と並び順は変わらない
+				.andExpect(jsonPath("$.status").value("todo"))
+				.andExpect(jsonPath("$.position").value(1));
+	}
+
+	@Test
+	void 送らなかった項目はそのまま() throws Exception {
+		番号1のタスクを用意する();
+
+		変更する(1, "{\"priority\": \"low\"}")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.title").value("買い物"))
+				.andExpect(jsonPath("$.description").value("牛乳"))
+				.andExpect(jsonPath("$.dueDate").value("2026-11-10"))
+				.andExpect(jsonPath("$.priority").value("low"));
+	}
+
+	@Test
+	void 説明と期限は空にできる() throws Exception {
+		番号1のタスクを用意する();
+
+		変更する(1, "{\"description\": \"   \", \"dueDate\": null}")
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.description").doesNotExist())
+				.andExpect(jsonPath("$.dueDate").doesNotExist());
+	}
+
+	@Test
+	void おかしい値なら400で保存しない() throws Exception {
+		番号1のタスクを用意する();
+
+		変更する(1, "{\"title\": \"  \"}").andExpect(status().isBadRequest());
+		変更する(1, "{\"title\": \"" + "あ".repeat(51) + "\"}").andExpect(status().isBadRequest());
+		変更する(1, "{\"description\": \"" + "あ".repeat(501) + "\"}").andExpect(status().isBadRequest());
+		変更する(1, "{\"priority\": \"urgent\"}").andExpect(status().isBadRequest());
+		変更する(1, "{\"priority\": null}").andExpect(status().isBadRequest());
+		変更する(1, "{\"dueDate\": \"2026-02-30\"}").andExpect(status().isBadRequest());
+		変更する(1, "{\"title\": 123}").andExpect(status().isBadRequest());
+		verify(taskRepository, never()).save(any(Task.class));
+	}
+
+	@Test
+	void 説明は500文字までOK() throws Exception {
+		番号1のタスクを用意する();
+
+		変更する(1, "{\"description\": \"" + "あ".repeat(500) + "\"}")
+				.andExpect(status().isOk());
+	}
+
+	@Test
+	void 無い番号を変えようとしたら404() throws Exception {
+		given(taskRepository.findById(999L)).willReturn(Optional.empty());
+
+		変更する(999, "{\"title\": \"買い物\"}")
+				.andExpect(status().isNotFound());
+		verify(taskRepository, never()).save(any(Task.class));
+	}
+
+	@Test
+	void 新しいタスクの優先度は中() throws Exception {
+		given(taskRepository.findTopByStatusOrderByPositionDesc("todo")).willReturn(Optional.empty());
+		saveで番号をつける();
+
+		登録する("{\"title\": \"買い物\"}")
+				.andExpect(jsonPath("$.priority").value("medium"));
 	}
 
 }
