@@ -4,12 +4,13 @@
 
 ## まとめ（先に読むところ）
 - **動きはしっかりしている**。自動テスト 31件はすべて合格。入力チェックは画面とサーバーの両方にあり、絵文字の数え方までそろっている。
-- **書き方の「型」から外れているところ**がいくつかある。いちばん大きいのは「バックエンドの仕事が1つのファイル（TaskController）に全部入っている」こと（→ A-1）。
+- **書き方の「型」から外れているところ**がいくつかある。いちばん大きかったのは「バックエンドの仕事が1つのファイル（TaskController）に全部入っている」こと（→ A-1）。
+  - 大事さ「高」のうち **A-1 と B-1 は直した**（#20。動きは変えず、置き場所だけ整理）。A-2 は API の約束が変わるので次の段階でやる。
 - **ドキュメントが実装に追いついていない**。README の「できること」「API」は、追加・編集・移動・削除がまだ書かれていない（→ C）。
 
 大事さ：**高** ＝ 先に直すとよい ／ **中** ＝ 機会があれば ／ **低** ＝ 今のままでも困らない
 
-今回はコードを直していません。直すときは、1つずつイシューにして進めます。
+直した項目は「状況」に ✅ をつけています。のこりは、1つずつイシューにして進めます。
 
 ---
 
@@ -17,7 +18,7 @@
 
 | No | 大事さ | 場所 | いまの書き方 | ふつうの書き方 |
 |----|------|------|------------|--------------|
-| A-1 | 高 | [TaskController.java](../backend/src/main/java/com/example/backend/TaskController.java) | 入力チェック・並び替えの計算・トランザクション（`@Transactional`）が、ぜんぶコントローラーにある | コントローラーは「受け取って返す」だけ。仕事のルールは `TaskService` クラスに分ける。トランザクションも Service に付ける |
+| A-1 | 高 ✅ 直した | [TaskController.java](../backend/src/main/java/com/example/backend/TaskController.java) | 入力チェック・並び替えの計算・トランザクション（`@Transactional`）が、ぜんぶコントローラーにある | コントローラーは「受け取って返す」だけ。仕事のルールは `TaskService` クラスに分ける。トランザクションも Service に付ける。→ [TaskService.java](../backend/src/main/java/com/example/backend/TaskService.java) に移した。下の「同」「Controller」の行は、いまは TaskService のこと |
 | A-2 | 高 | 同 `update`（121行目）・`sortByPriority`（223行目） | 中身を `Map<String, Object>` で受け取り、`asText` / `asPlace` で型を手で確かめている | 受け取り用の record（例 `UpdateTaskRequest`）を作り、`spring-boot-starter-validation` の `@Valid` `@NotBlank` `@Size(max = 50)` で確かめる。「送られてこない」と「空にしたい」の区別は、record の項目を `JsonNullable` などで表す |
 | A-3 | 中 | [Task.java](../backend/src/main/java/com/example/backend/Task.java) 40・52行目 | status・priority が文字（String）。使ってよい値は Controller の `Set` で確かめる | `enum`（決まった値だけの型）にして `@Enumerated(EnumType.STRING)` を付ける。おかしい値は受け取る時点で弾ける |
 | A-4 | 中 | エラーの返し方（Controller 全体） | `ResponseStatusException` をあちこちで投げる | `@RestControllerAdvice` で1か所にまとめる。形は Spring 標準の `ProblemDetail`（`spring.mvc.problemdetails.enabled=true`） |
@@ -28,17 +29,17 @@
 | A-9 | 低 | TaskController.java 44行目 | `produces = "application/json;charset=UTF-8"` | 文字化け対策の回避策で、理由もコメントにある。残してよいが、ふつうは書かない |
 | A-10 | 低 | パッケージ | 全部 `com.example.backend` の1か所 | 小さいうちはこれでよい。増えたら `controller` / `service` / `repository` などに分ける |
 | A-11 | 低 | HelloController / DbCheckController / HELP.md | 最初の確認用が残っている | 動作確認は Spring 標準の Actuator（`/actuator/health`）。もとの設計書の `/api/health` にも当たる |
-| A-12 | 低 | [TaskControllerTest.java](../backend/src/test/java/com/example/backend/TaskControllerTest.java) 109・327・395行目 | `org.assertj...` `org.hamcrest...` を import せずに長い名前で書いている | 上で import して短く書く |
+| A-12 | 低 | [TaskControllerTest.java](../backend/src/test/java/com/example/backend/TaskControllerTest.java) 112・330・398行目 | `org.assertj...` `org.hamcrest...` を import せずに長い名前で書いている | 上で import して短く書く |
 | A-13 | 低 | TaskController.java `nextPosition`（250行目） | 一番下の番号を読んでから +1 する | 同時に2件追加すると同じ番号になりうる。1人で使うので実害は小さい |
 
 ## B. React のふつうの書き方から外れているところ
 
 | No | 大事さ | 場所 | いまの書き方 | ふつうの書き方 |
 |----|------|------|------------|--------------|
-| B-1 | 高 | [App.jsx](../frontend/src/App.jsx)・[TaskForm.jsx](../frontend/src/TaskForm.jsx)・[TaskDetail.jsx](../frontend/src/TaskDetail.jsx) | `fetch` と「エラーの理由を取り出す」処理が5か所に同じ形でコピーされている | `src/api.js` に `getTasks()` `createTask()` などをまとめ、画面の部品からはそれを呼ぶ |
+| B-1 | 高 ✅ 直した | [App.jsx](../frontend/src/App.jsx)・[TaskForm.jsx](../frontend/src/TaskForm.jsx)・[TaskDetail.jsx](../frontend/src/TaskDetail.jsx) | `fetch` と「エラーの理由を取り出す」処理が5か所に同じ形でコピーされている | `src/api.js` に `fetchTasks()` `createTask()` などをまとめ、画面の部品からはそれを呼ぶ。→ [api.js](../frontend/src/api.js) を作った |
 | B-2 | 中 | App.jsx 37行目 `useEffect` | 片づけ処理がない。開発中（StrictMode）は2回読みこむ | `AbortController` か `ignore` フラグで、いらなくなった読みこみを捨てる |
-| B-3 | 中 | App.jsx 90行目 `handleMove` | 失敗したら `before`（動かす前の一覧）に戻す | 続けて2枚動かして1枚目が失敗すると、2枚目の移動まで消える。失敗したら一覧を読みなおすほうが安全 |
-| B-4 | 中 | TaskForm.jsx 4行目・TaskDetail.jsx 5〜6・23行目 | `TITLE_MAX` `DESCRIPTION_MAX` `countChars` が2つのファイルに重複 | `priorities.js` と同じように共通のファイル（例 `rules.js`）にまとめる |
+| B-3 | 中 | App.jsx `handleMove`（`before` の行） | 失敗したら `before`（動かす前の一覧）に戻す | 続けて2枚動かして1枚目が失敗すると、2枚目の移動まで消える。失敗したら一覧を読みなおすほうが安全 |
+| B-4 | 中 | TaskForm.jsx 5行目・TaskDetail.jsx 6〜7・24行目 | `TITLE_MAX` `DESCRIPTION_MAX` `countChars` が2つのファイルに重複 | `priorities.js` と同じように共通のファイル（例 `rules.js`）にまとめる |
 | B-5 | 中 | [Card.jsx](../frontend/src/Card.jsx) 36〜43行目 | 列の移動・並び替えはドラッグだけ | キーボードやスマホでは動かせない。ボタンかメニューなど、ほかの手段もあるのがふつう（→ C-2-11） |
 | B-6 | 低 | [ConfirmDialog.jsx](../frontend/src/ConfirmDialog.jsx) 52行目 | 詳細モーダルの CSS クラス `task-detail` を借りている | 片方の見た目を変えると、もう片方も変わる。共通のクラス名（例 `modal`）にする |
 | B-7 | 低 | [package.json](../frontend/package.json) | `@types/react` `@types/react-dom` が入っている | TypeScript を使わないのでいらない（雛形の残り） |
@@ -107,5 +108,5 @@ springboot-app は task-board を作りなおしたもの。下の多くは「�
 **いま出ている警告**
 | 道具 | 場所 | 中身 |
 |------|------|------|
-| oxlint | ConfirmDialog.jsx 50行目・TaskDetail.jsx 131行目（各2件） | `<dialog>` に `onClick`（外側をクリックで閉じる）があるが、キーボード用の処理がない。Esc キーで閉じられるので実害は小さい |
-| Checkstyle | TaskControllerTest.java 189・395・396行目 | 1行が120文字をこえている |
+| oxlint | ConfirmDialog.jsx 50行目・TaskDetail.jsx 122行目（各2件） | `<dialog>` に `onClick`（外側をクリックで閉じる）があるが、キーボード用の処理がない。Esc キーで閉じられるので実害は小さい |
+| Checkstyle | TaskControllerTest.java 192・398・399行目 | 1行が120文字をこえている |

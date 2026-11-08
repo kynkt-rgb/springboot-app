@@ -43,7 +43,8 @@ springboot-app/
 │       │   ├── BackendApplication.java  起動するところ
 │       │   ├── Task.java                タスク1件の形（tasks 表）
 │       │   ├── TaskRepository.java      DB の読み書き
-│       │   ├── TaskController.java      タスクの API
+│       │   ├── TaskController.java      タスクの API（受け取って TaskService に渡す）
+│       │   ├── TaskService.java         タスクの仕事のルール（入力チェック・並び替え）
 │       │   ├── HelloController.java     動作確認用（/api/hello）
 │       │   └── DbCheckController.java   DB 接続の確認用（/api/db-check）
 │       ├── main/resources/application.properties  DB の接続先などの設定
@@ -56,6 +57,7 @@ springboot-app/
 │       ├── App.jsx              ボード画面（API を呼んで3列に分ける）
 │       ├── Column.jsx           1列
 │       ├── Card.jsx             カード1枚
+│       ├── api.js               バックエンドを呼ぶ関数（fetch はここだけ）
 │       ├── App.css / index.css  見た目
 ├── db/seed.sql                  テストデータ（6件）
 ├── compose.yaml                 Docker の PostgreSQL の設定

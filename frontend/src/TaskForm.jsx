@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import * as api from './api.js'
 
 /** タイトルの最大の文字数（サーバーと同じ） */
 const TITLE_MAX = 50
@@ -35,17 +36,7 @@ function TaskForm({ onAdded }) {
     setBusy(true)
     setError('')
     try {
-      const res = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: trimmed }),
-      })
-      if (!res.ok) {
-        // サーバーが理由（message）を返していれば、それを出す
-        const body = await res.json().catch(() => null)
-        throw new Error(body?.message || `サーバーがエラーを返しました（${res.status}）`)
-      }
-      const task = await res.json()
+      const task = await api.createTask(trimmed)
       onAdded(task)
       // 成功したら入力欄を空にする
       setTitle('')

@@ -3,6 +3,7 @@ import Column from './Column.jsx'
 import TaskForm from './TaskForm.jsx'
 import TaskDetail from './TaskDetail.jsx'
 import ConfirmDialog from './ConfirmDialog.jsx'
+import * as api from './api.js'
 import './App.css'
 
 /** ボードの3つの列（左から順に表示する） */
@@ -35,13 +36,8 @@ function App() {
   const [sortingStatus, setSortingStatus] = useState(null)
 
   useEffect(() => {
-    fetch('/api/tasks')
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`サーバーがエラーを返しました（${res.status}）`)
-        }
-        return res.json()
-      })
+    api
+      .fetchTasks()
       .then((data) => {
         setTasks(data)
         setState('ok')
@@ -98,19 +94,10 @@ function App() {
     setMoveError('')
 
     try {
-      const res = await fetch(`/api/tasks/${taskId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        // position は 1 から数える（一番上が 1）
-        body: JSON.stringify({ status, position: newIndex + 1 }),
-      })
-      if (!res.ok) {
-        // サーバーが理由（message）を返していれば、それを出す
-        const body = await res.json().catch(() => null)
-        throw new Error(body?.message || `サーバーがエラーを返しました（${res.status}）`)
-      }
+      // position は 1 から数える（一番上が 1）
+      const saved = await api.updateTask(taskId, { status, position: newIndex + 1 })
       // サーバーが決めた本当の値（position・最後に変えた日時など）で入れかえる
-      replaceTask(await res.json())
+      replaceTask(saved)
     } catch (err) {
       // 動かす前の並びに戻す
       setTasks(before)
@@ -127,18 +114,9 @@ function App() {
     setSortingStatus(status)
     setMoveError('')
     try {
-      const res = await fetch('/api/tasks/sort-by-priority', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      })
-      if (!res.ok) {
-        // サーバーが理由（message）を返していれば、それを出す
-        const body = await res.json().catch(() => null)
-        throw new Error(body?.message || `サーバーがエラーを返しました（${res.status}）`)
-      }
       // 返ってきたのは、並べなおしたその列のタスク。新しい並び順（position）で入れかえる
-      const sorted = new Map((await res.json()).map((t) => [t.id, t]))
+      const column = await api.sortTasksByPriority(status)
+      const sorted = new Map(column.map((t) => [t.id, t]))
       setTasks((prev) => prev.map((t) => sorted.get(t.id) ?? t))
     } catch (err) {
       setMoveError(`優先度順に並べられませんでした：${err.message}`)
@@ -162,13 +140,8 @@ function App() {
   async function deleteTask(task) {
     setMoveError('')
     try {
-      const res = await fetch(`/api/tasks/${task.id}`, { method: 'DELETE' })
-      // 404（もう無い）なら、だれかが先に消している。画面から消すだけでよい
-      if (!res.ok && res.status !== 404) {
-        // サーバーが理由（message）を返していれば、それを出す
-        const body = await res.json().catch(() => null)
-        throw new Error(body?.message || `サーバーがエラーを返しました（${res.status}）`)
-      }
+      // 404（もう無い）のときも、api.deleteTask は成功あつかいにする（画面から消すだけでよい）
+      await api.deleteTask(task.id)
       // 一覧から抜く。読みこみ直さなくても、すぐにカードが消える
       setTasks((prev) => prev.filter((t) => t.id !== task.id))
     } catch (err) {
