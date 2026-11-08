@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -418,6 +419,27 @@ class TaskControllerTest {
 				.content("{}"))
 				.andExpect(status().isBadRequest());
 		verify(taskRepository, never()).saveAll(any());
+	}
+
+	// --- 削除（DELETE /api/tasks/{id}） ---
+
+	@Test
+	void 削除すると204でデータベースから消す() throws Exception {
+		Task t = task(1, "買い物", "todo", 1);
+		given(taskRepository.findById(1L)).willReturn(Optional.of(t));
+
+		mockMvc.perform(delete("/api/tasks/1"))
+				.andExpect(status().isNoContent());
+		verify(taskRepository).delete(t);
+	}
+
+	@Test
+	void 無い番号を削除しようとしたら404で何も消さない() throws Exception {
+		given(taskRepository.findById(999L)).willReturn(Optional.empty());
+
+		mockMvc.perform(delete("/api/tasks/999"))
+				.andExpect(status().isNotFound());
+		verify(taskRepository, never()).delete(any(Task.class));
 	}
 
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import Column from './Column.jsx'
 import TaskForm from './TaskForm.jsx'
 import TaskDetail from './TaskDetail.jsx'
+import ConfirmDialog from './ConfirmDialog.jsx'
 import './App.css'
 
 /** ボードの3つの列（左から順に表示する） */
@@ -17,6 +18,7 @@ const COLUMNS = [
  * 返ってきたタスクを status ごとに3列に分けて表示する。
  * 上のフォームでタスクを登録すると、「やること」列の一番下に増える。
  * カードをドラッグ&ドロップすると、ほかの列や同じ列の中の、落とした場所に移る。
+ * カードの「×」を押すと、確認してからタスクを削除する。
  */
 function App() {
   const [tasks, setTasks] = useState([])
@@ -25,8 +27,10 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('')
   // 詳細のモーダルで見ているタスク（見ていないときは null）
   const [selectedTask, setSelectedTask] = useState(null)
-  // カードの移動・並べかえに失敗したときの理由（なければ ''）
+  // カードの移動・並べかえ・削除に失敗したときの理由（なければ ''）
   const [moveError, setMoveError] = useState('')
+  // 削除してよいか確認している最中のタスク（していないときは null）
+  const [deleteTarget, setDeleteTarget] = useState(null)
   // 「優先度順」で並べている最中の列の status（していないときは null）
   const [sortingStatus, setSortingStatus] = useState(null)
 
@@ -143,6 +147,35 @@ function App() {
     }
   }
 
+  /**
+   * カードの「×」で呼ばれる。すぐには消さず、確認の窓（ConfirmDialog）を出す。
+   * 窓で「削除する」を押したときだけ、deleteTask で本当に消す。
+   */
+  function handleDelete(task) {
+    setDeleteTarget(task)
+  }
+
+  /**
+   * タスクを削除する。DELETE /api/tasks/{id} を送る。
+   * データベースから完全に消える（元には戻せない）ので、消せたことを確かめてから画面からも消す。
+   */
+  async function deleteTask(task) {
+    setMoveError('')
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, { method: 'DELETE' })
+      // 404（もう無い）なら、だれかが先に消している。画面から消すだけでよい
+      if (!res.ok && res.status !== 404) {
+        // サーバーが理由（message）を返していれば、それを出す
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.message || `サーバーがエラーを返しました（${res.status}）`)
+      }
+      // 一覧から抜く。読みこみ直さなくても、すぐにカードが消える
+      setTasks((prev) => prev.filter((t) => t.id !== task.id))
+    } catch (err) {
+      setMoveError(`「${task.title}」を削除できませんでした：${err.message}`)
+    }
+  }
+
   /** 一覧の中の、同じ番号のタスクを入れかえる */
   function replaceTask(task) {
     setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)))
@@ -180,11 +213,25 @@ function App() {
                 .sort((a, b) => a.position - b.position)}
               onOpen={setSelectedTask}
               onMove={handleMove}
+              onDelete={handleDelete}
               sorting={sortingStatus === col.status}
               onSortByPriority={handleSortByPriority}
             />
           ))}
         </div>
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title="タスクの削除"
+          message={`「${deleteTarget.title}」を削除しますか？\n削除すると元に戻せません。`}
+          confirmLabel="削除する"
+          onConfirm={() => {
+            setDeleteTarget(null)
+            deleteTask(deleteTarget)
+          }}
+          onCancel={() => setDeleteTarget(null)}
+        />
       )}
 
       {selectedTask && (
