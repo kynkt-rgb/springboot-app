@@ -15,7 +15,7 @@ import Card from './Card.jsx'
  * 見出しのとなりの「優先度順」ボタンを押すと onSortByPriority(この列の status) を呼ぶ。
  * sorting が true のあいだ（保存している最中）は、ボタンを押せなくする。
  */
-function Column({ status, name, tasks, sorting, onOpen, onMove, onSortByPriority }) {
+function Column({ status, name, tasks, sorting, onOpen, onMove, onDelete, onSortByPriority }) {
   // カードがこの列の上に来ているあいだ、入れる場所を入れておく（来ていないときは null）
   const [dropIndex, setDropIndex] = useState(null)
 
@@ -103,6 +103,7 @@ function Column({ status, name, tasks, sorting, onOpen, onMove, onSortByPriority
               index={index}
               dropMark={dropMarkOf(index)}
               onOpen={onOpen}
+              onDelete={onDelete}
             />
           ))}
         </ul>

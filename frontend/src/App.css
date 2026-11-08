@@ -112,8 +112,10 @@ h1 {
   gap: 8px;
 }
 
-/* カード：長いタイトルは折り返して全部見せる */
+/* カード：長いタイトルは折り返して全部見せる。中身のボタンと「×」を横にならべる */
 .card {
+  display: flex;
+  align-items: flex-start;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   overflow-wrap: anywhere;
@@ -121,7 +123,8 @@ h1 {
 /* カードの中身はボタン（クリックで詳細を開く）。見た目はふつうのカードのまま */
 .card-button {
   display: block;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 12px;
   font: inherit;
   color: inherit;
@@ -133,6 +136,24 @@ h1 {
 }
 .card-button:hover {
   background: rgba(0, 0, 0, 0.05);
+}
+/* 削除の「×」ボタン（task-board のプロトタイプと同じ見た目） */
+.delete-button {
+  flex: none;
+  margin: 6px 6px 0 0;
+  padding: 2px 8px;
+  font: inherit;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  color: #555555;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.delete-button:hover {
+  color: #c0262d;
+  background: rgba(0, 0, 0, 0.06);
 }
 /* つかめることがわかるように、カーソルを「手」にする */
 .card-button[draggable='true'] {
@@ -291,6 +312,16 @@ h1 {
 .task-detail button.secondary {
   color: #1f1f1f;
   background: #e4e6ea;
+}
+/* 削除するボタンは赤（取り消せないことが伝わるように） */
+.task-detail button.danger {
+  background: #c0262d;
+}
+/* 確認の窓の文。\n の改行をそのまま見せる */
+.confirm-message {
+  margin: 0 0 20px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 .task-detail button:disabled {
   opacity: 0.6;

@@ -12,9 +12,9 @@ function formatDueDate(value) {
  * クリック（または Tab で選んで Enter）すると onOpen(task) を呼び、詳細のモーダルを開く。
  * つかんで（ドラッグして）ほかの列や同じ列のほかの場所に落とすと、そこに移る。落とし先の処理は Column がやる。
  * index は列の中で上から何番目か（0から数える）。dropMark が 'before' / 'after' なら、上か下に青い線を出す。
- * （削除のボタンは、API ができてから足す）
+ * 右上の「×」を押すと onDelete(task) を呼ぶ（確認ダイアログと削除は App がやる）。
  */
-function Card({ task, index, dropMark, onOpen }) {
+function Card({ task, index, dropMark, onOpen, onDelete }) {
   const priority = task.priority ?? 'medium'
   // つかんでいるあいだは true（カードを薄くする）
   const [dragging, setDragging] = useState(false)
@@ -46,6 +46,16 @@ function Card({ task, index, dropMark, onOpen }) {
           <span className={`priority priority-${priority}`}>優先度：{priorityName(priority)}</span>
           {task.dueDate && <span>期限：{formatDueDate(task.dueDate)}</span>}
         </span>
+      </button>
+      {/* ボタンの中にボタンは入れられないので、カードのボタンのとなりに置く */}
+      <button
+        type="button"
+        className="delete-button"
+        onClick={() => onDelete(task)}
+        aria-label={`「${task.title}」を削除`}
+        title="削除"
+      >
+        ×
       </button>
     </li>
   )

@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
  * POST /api/tasks              … タスクを 1件登録する（「やること」列の一番下に入る）
  * PATCH /api/tasks/1           … 番号 1 のタスクの、送られてきた項目だけを変える
  *                                （列の移動・列の中での並び替えもこれでやる）
+ * DELETE /api/tasks/1          … 番号 1 のタスクをデータベースから完全に消す（物理削除）
  * POST /api/tasks/sort-by-priority … 1つの列のカードを、優先度の高い順（高 → 中 → 低）に並べなおす
  *
  * 返す値（Task）は、Spring が自動で JSON に変えてくれる。
@@ -192,6 +194,18 @@ public class TaskController {
 			column.get(i).setPosition((long) (i + 1));
 		}
 		taskRepository.saveAll(column);
+	}
+
+	/**
+	 * タスクを 1件、データベースから完全に消す（物理削除。元には戻せない）。
+	 * 成功すると 204 No Content（「消しました。返すものはありません」）。無い番号なら 404。
+	 */
+	@DeleteMapping("/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void delete(@PathVariable Long id) {
+		// 先に「あるかどうか」を確かめる。無ければ get() が 404 にする
+		Task task = get(id);
+		taskRepository.delete(task);
 	}
 
 	/** 優先度の高い順。この順番どおりに並べる（high が一番上） */
