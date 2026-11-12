@@ -1,0 +1,8 @@
+# このファイルを terraform.tfvars という名前でコピーして、自分の値を書く
+# terraform.tfvars は GitHub に上げない（.gitignore 済み）
+
+# 今使っている PC の IP アドレス（curl https://checkip.amazonaws.com で調べる）
+my_ip = "203.0.113.10"
+
+# SSH 公開鍵の場所（ちがう場所に作ったときだけ書きかえる）
+# public_key_path = "~/.ssh/springboot-ec2.pub"
