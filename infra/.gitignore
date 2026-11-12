@@ -1,0 +1,6 @@
+# Terraform が自動で作るもの・自分の値（GitHub に上げない）
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+crash.log
