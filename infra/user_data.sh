@@ -15,7 +15,8 @@ fi
 
 # 2. Java 21（Amazon Corretto）と、インストールに使う道具
 #    libatomic は Node.js が動くのに必要（Amazon Linux には最初から入っていない）
-dnf install -y java-21-amazon-corretto-devel git unzip tar xz libatomic
+#    postgresql17 は RDS につながるか確かめる psql コマンド（DB 本体は入らない）
+dnf install -y java-21-amazon-corretto-devel git unzip tar xz libatomic postgresql17
 
 # 3. Node.js（公式サイトの版をそのまま入れる。dnf には 26 系がないため）
 cd /tmp
@@ -31,4 +32,5 @@ rm -f "$NODE_FILE" SHASUMS256.txt
 java -version
 /usr/local/bin/node -v
 /usr/local/bin/npm -v
+psql --version
 echo "user_data done"

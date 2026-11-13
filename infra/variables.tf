@@ -39,3 +39,29 @@ variable "node_version" {
   type        = string
   default     = "26.13.0"
 }
+
+# --- RDS（compose.yaml に合わせる） ---
+
+variable "db_name" {
+  description = "最初に作るデータベースの名前"
+  type        = string
+  default     = "springboot_app"
+}
+
+variable "db_username" {
+  description = "DB にログインするユーザー名"
+  type        = string
+  default     = "app"
+}
+
+variable "db_engine_version" {
+  description = "PostgreSQL のバージョン（手元の Docker の postgres:17 = 17.11）"
+  type        = string
+  default     = "17.11"
+}
+
+variable "db_instance_class" {
+  description = "RDS の大きさ（無料枠の db.t4g.micro）"
+  type        = string
+  default     = "db.t4g.micro"
+}
