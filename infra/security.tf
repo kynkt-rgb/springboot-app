@@ -27,6 +27,15 @@ resource "aws_vpc_security_group_ingress_rule" "frontend" {
   to_port           = 5173
 }
 
+resource "aws_vpc_security_group_ingress_rule" "http" {
+  security_group_id = aws_security_group.app.id
+  description       = "HTTP (Nginx) from my IP"
+  cidr_ipv4         = "${var.my_ip}/32"
+  ip_protocol       = "tcp"
+  from_port         = 80
+  to_port           = 80
+}
+
 # 外向きはすべて許可（インストールのダウンロードなどに使う）
 resource "aws_vpc_security_group_egress_rule" "all" {
   security_group_id = aws_security_group.app.id

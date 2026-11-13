@@ -1,0 +1,24 @@
+# Spring Boot（バックエンド）を EC2 で動かし続けるための systemd の設定
+# 置き場所：/etc/systemd/system/springboot-app.service
+# 接続情報は /opt/springboot-app/application-production.yml から読む（このファイルにパスワードは書かない）
+
+[Unit]
+Description=springboot-app backend (Spring Boot)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=springboot
+Group=springboot
+# このフォルダにある application-production.yml を Spring Boot が自動で読む
+WorkingDirectory=/opt/springboot-app
+# t3.micro はメモリが 1GB なので、Java が使うメモリに上限をつける
+ExecStart=/usr/bin/java -Xmx384m -jar /opt/springboot-app/app.jar --spring.profiles.active=production
+# 止まってしまったら 10 秒後に自動で起動しなおす
+Restart=on-failure
+RestartSec=10
+# Spring Boot は止めるときに 143 で終わることがあるので、正常終了として扱う
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
