@@ -34,3 +34,24 @@ resource "aws_vpc_security_group_egress_rule" "all" {
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 }
+
+# --- RDS 用 ---
+# 5432 番に入れるのは、上の EC2 のセキュリティグループがついたものだけ
+# 自分の PC の IP やインターネットからのルールは書かない
+
+resource "aws_security_group" "db" {
+  name        = "${var.project}-db-sg"
+  description = "Allow PostgreSQL only from the app EC2"
+  vpc_id      = aws_vpc.main.id
+
+  tags = { Name = "${var.project}-db-sg" }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "db_from_app" {
+  security_group_id            = aws_security_group.db.id
+  description                  = "PostgreSQL from app EC2 only"
+  referenced_security_group_id = aws_security_group.app.id
+  ip_protocol                  = "tcp"
+  from_port                    = 5432
+  to_port                      = 5432
+}

@@ -44,3 +44,16 @@ resource "aws_route_table_association" "public" {
   subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public.id
 }
+
+# 非公開サブネット（RDS 用）
+# RDS は「AZ が2つ以上あるサブネットのまとまり」が必要なので2つつくる（RDS 本体は1台だけ）
+# ルートテーブルをつながないので、VPC の中だけの道しかない（インターネットには出られない）
+resource "aws_subnet" "private" {
+  count = 2
+
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.${11 + count.index}.0/24"
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = { Name = "${var.project}-private-${count.index + 1}" }
+}

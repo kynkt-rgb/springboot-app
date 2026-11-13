@@ -12,3 +12,19 @@ output "frontend_url" {
   description = "画面の URL（アプリを起動したあとで使う）"
   value       = "http://${aws_instance.app.public_ip}:5173"
 }
+
+output "db_address" {
+  description = "RDS の接続先（EC2 の中からだけつながる）"
+  value       = aws_db_instance.main.address
+}
+
+output "db_url" {
+  description = "Spring Boot の DB_URL に入れる値"
+  value       = "jdbc:postgresql://${aws_db_instance.main.address}:${aws_db_instance.main.port}/${var.db_name}"
+}
+
+output "db_password" {
+  description = "RDS のパスワード（terraform output -raw db_password で見る）"
+  value       = random_password.db.result
+  sensitive   = true
+}
